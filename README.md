@@ -2,6 +2,8 @@
 
 A privacy-safe portfolio implementation of a wedding guest experience deployed through an Azure landing-zone pattern. Every person, date, venue, schedule, and address in this repository is synthetic.
 
+**Live demo:** [www.sidvivah26.com](https://www.sidvivah26.com/)
+
 ## The problem
 
 Multi-day events create operational overhead: schedule changes are repeated across chats and documents, guests struggle to find the current information, and organizers maintain public and internal details in too many places.
@@ -47,6 +49,8 @@ Open `site/index.html`. The build produces one self-contained page and runs the 
 ## Traffic metrics
 
 Azure Static Web Apps publishes platform metrics including `SiteHits`, `SiteErrors`, and `BytesSent`. Standard Azure platform metrics are collected without adding analytics JavaScript or cookies to this site. They can be viewed under **Static Web App → Monitoring → Metrics** in the Azure portal and retained for 90 days.
+
+See [deployment evidence](docs/deployment-evidence.md) for the verified production result.
 
 The initial observability design intentionally avoids Application Insights and Log Analytics ingestion. Those can be added later if page-level analytics become necessary, with a budget and data-retention decision first.
 
