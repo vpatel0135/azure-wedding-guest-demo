@@ -1764,6 +1764,17 @@ select.pinput{appearance:none; cursor:pointer;}
 .seating-back{display:inline-block;margin-top:28px;color:#705325;font-size:13px;text-decoration:none;border-bottom:1px solid currentColor;}
 @media(max-width:520px){.seating-masthead{padding-top:30px}.seating-search-panel{padding:16px;border-radius:20px}.seating-table ul{columns:1}.seating-result-number{font-size:58px}.seating-match-grid{grid-template-columns:1fr}}
 
+/* Preserve the original guest-app hashtag card presentation. */
+.guest-hashtag-card{min-width:0;overflow:hidden;background:var(--g-card);border:1px solid var(--g-line);border-top:2px solid var(--g-gold);border-radius:var(--g-feature-radius);color:var(--g-ink);}
+.guest-hashtag-meaning{margin:0 16px;padding:13px 0 16px;border-top:1px solid var(--g-line);text-align:center;}
+.guest-hashtag-meaning h3{margin:0 0 12px;font-family:inherit;font-size:10px;font-weight:700;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;color:var(--g-ink-dim);}
+.guest-hashtag-meaning dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0;}
+.guest-hashtag-meaning dl > div + div{border-left:1px solid var(--g-line);}
+.guest-hashtag-meaning dt{font-family:var(--g-serif);font-size:21px;line-height:1.2;color:var(--g-gold);}
+.guest-hashtag-meaning dd{margin:5px 0 0;font-size:11px;line-height:1.4;color:var(--g-ink-dim);}
+#guest-view-home .guest-hashtag-card .guest-action-card.is-photo{border:0;padding:16px 12px;}
+.guest-hashtag-card :is(.guest-action-card,.guest-schedule-photo-nudge):focus-visible{outline-offset:-4px;}
+
 .portfolio-demo-banner{position:relative;z-index:1000;padding:9px 16px;text-align:center;background:#071c35;color:#f6fbff;font:600 12px/1.4 system-ui,sans-serif;letter-spacing:.02em}
 
 </style>
