@@ -1,0 +1,19 @@
+name: Validate public demo
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-privacy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build synthetic public artifact
+        run: python3 build/build.py
+      - name: Confirm generated artifact is committed
+        run: git diff --exit-code -- site/index.html

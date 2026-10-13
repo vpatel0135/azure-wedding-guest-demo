@@ -1,0 +1,7 @@
+resource_group_name  = "rg-eus2p-state-01"
+storage_account_name = "steus2pstate01"
+container_name       = "wedding-production"
+key                  = "wedding-production.tfstate"
+use_azuread_auth     = true
+tenant_id            = "<tenant-id>"
+subscription_id      = "<subscription-id>"

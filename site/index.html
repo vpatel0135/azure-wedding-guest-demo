@@ -1,0 +1,3322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Avery &amp; Jordan Demo">
+<title>Wedding Operations Demo · Avery &amp; Jordan</title>
+<!-- ==========================================================================
+     OUR WEDDING — public Guest site shell (standalone build)
+
+     This file, plus guest-data.generated.js and guest-app.js spliced into
+     the empty <script> tag below by build/build_guest.py, is the ENTIRE
+     public deployable. It shares its <style> block with the private
+     Wedding Team app's skeleton.html verbatim (CSS carries no wedding data
+     — class names and colors only) so both experiences render the same
+     blue visual system, but it ships NONE of the private app's markup: no
+     search overlay, no detail drawer, no access-code modal. Those elements
+     don't exist here because the JavaScript that would use them isn't
+     shipped to this build either — see guest-app.js's header comment.
+     ========================================================================== -->
+<style>
+:root{
+  /* ==========================================================================
+     LUXURY VISUAL SYSTEM (10-SECOND EXPERIENCE milestone, requirement 8).
+     Token NAMES are unchanged yet again (so every var(--teal) etc. reference
+     across app.js and this stylesheet keeps working) — only the VALUES moved
+     from the prior warm-but-flat marigold/champagne system to a refined
+     charcoal-structure + restrained-champagne-gold direction: dark,
+     near-black STRUCTURE (sidebar/topbar/bottom-nav — see "Wedding Team
+     chrome" below) framing ivory/warm-white READING SURFACES (cards, the
+     Mission/Timeline/Directory content itself), with gold used only as an
+     accent — never as a body-copy color. --teal is deliberately less
+     saturated than the old marigold-orange (restrained "champagne", not
+     "casino gold"); --chrome-gold is a brighter sibling of the same hue,
+     reserved for the dark chrome where a lighter accent is legible.
+     See CHANGELOG.md for the full rationale and the contrast audit.
+     ========================================================================== */
+  --bg:#f3f8ff;          /* airy blue-white reading canvas */
+  --bg-2:#e7f0ff;        /* soft sky surface */
+  --card:rgba(255,255,255,0.78);
+  --card-border:rgba(20,68,128,0.14);
+  --card-hi:rgba(255,255,255,0.96);
+  --teal:#1769e0;        /* lively royal blue — primary action/accent */
+  --teal-dim:#0f4cad;
+  --blue:#4f8dff;        /* fresh electric-sky informational accent */
+  --ink:#10243f;
+  --ink-dim:#45627f;
+  --ink-faint:#5c7691;
+  --green:#16836d;
+  --yellow:#d86a35;
+  --red:#bb3f45;
+  --gray:#91a6bd;
+  --on-accent:#ffffff;
+  /* ---------- Wedding Team chrome (sidebar / topbar / bottom-nav) ----------
+     A refined charcoal/near-black structure — warm, not a flat/cold black —
+     that frames the ivory content canvas above. Reserved for structural
+     navigation only; every reading surface (cards, drawers, the views
+     themselves) stays on the ivory tokens above. */
+  --chrome-bg:#071c35;
+  --chrome-bg-2:#0d2b50;      /* elevated/hover chrome surface */
+  --chrome-border:rgba(255,255,255,0.08);
+  --chrome-ink:#f6fbff;
+  --chrome-ink-dim:#b9d0e9;
+  --chrome-gold:#7ab7ff;      /* cool sky-blue active accent on dark chrome */
+  --chrome-coral:#ffb088;
+  --radius:22px;
+  --radius-sm:16px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --nav-h:64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Elegant display serif for headline-scale moments (hero/drawer/event
+     titles), preferring high-quality faces already on macOS/iOS ahead of
+     the Georgia fallback — no network font fetch, which matters for guests
+     opening this on venue wifi. */
+  --serif:'Didot','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(900px 500px at 15% -10%, rgba(47,126,255,0.15), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(98,191,255,0.13), transparent 55%),
+    var(--bg);
+  color:var(--ink);
+  min-height:100%;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4,p{margin:0;}
+button{font-family:inherit;}
+a{color:inherit;}
+::selection{background:rgba(79,141,255,0.26);}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:rgba(16,68,128,0.20);border-radius:8px;}
+
+/* Respect reduced-motion preferences everywhere: shorten/disable animated
+   transitions and keyframe effects rather than removing them, so state
+   changes are still visible, just not animated. */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.001ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+
+.visually-hidden{
+  position:absolute!important;width:1px;height:1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;
+}
+:focus-visible{outline:2px solid var(--teal); outline-offset:2px; border-radius:8px;}
+
+/* ---------- App shell ---------- */
+#app{display:flex; min-height:100vh;}
+.app-main{flex:1; min-width:0; display:flex; flex-direction:column;}
+.view{
+  display:none;
+  padding:20px 16px calc(var(--nav-h) + 32px + var(--safe-bottom));
+  max-width:960px;
+  width:100%;
+  margin:0 auto;
+  animation:fadeIn .2s var(--ease);
+}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+/* LUXURY VISUAL SYSTEM (requirement 8) — the mobile topbar is Wedding Team
+   STRUCTURE, not a reading surface: charcoal chrome, sticky, framing the
+   ivory .view content that scrolls beneath it. */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  max-width:960px; margin:0 auto; width:100%;
+  position:sticky; top:0; z-index:30;
+  background:var(--chrome-bg);
+  border-bottom:1px solid var(--chrome-border);
+}
+.brand{
+  display:flex; align-items:center; gap:10px; background:none; border:none; color:var(--chrome-ink);
+  cursor:pointer; padding:6px 4px; border-radius:12px;
+}
+.brand-mark{
+  width:34px; height:34px; border-radius:10px;
+  background:linear-gradient(135deg, var(--chrome-gold), var(--blue));
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:15px; color:var(--chrome-bg);
+  box-shadow:0 4px 16px rgba(122,183,255,0.28);
+  flex-shrink:0;
+}
+.brand-text{display:flex; flex-direction:column; align-items:flex-start; line-height:1.15;}
+.brand-title{font-size:15px; font-weight:700; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--chrome-ink-dim); font-weight:500;}
+
+.topbar-actions{display:flex; align-items:center; gap:8px;}
+.icon-btn{
+  width:40px; height:40px; border-radius:12px; border:1px solid var(--card-border);
+  background:var(--card); color:var(--ink-dim); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:transform .15s var(--ease), background .15s var(--ease), color .15s var(--ease);
+}
+.icon-btn:hover{background:var(--card-hi); color:var(--ink); transform:translateY(-1px);}
+.icon-btn svg{width:18px; height:18px;}
+/* Chrome-context icon buttons (mobile topbar) sit on charcoal, not ivory. */
+.topbar .icon-btn{background:var(--chrome-bg-2); border-color:var(--chrome-border); color:var(--chrome-ink-dim);}
+.topbar .icon-btn:hover{background:#123a67; color:var(--chrome-ink);}
+.topbar .demo-badge{background:rgba(122,183,255,0.14); border-color:rgba(122,183,255,0.5); color:var(--chrome-gold);}
+.topbar .demo-badge-dot{background:var(--chrome-gold); box-shadow:0 0 4px rgba(122,183,255,.45);}
+
+.search-pill{
+  display:none;
+  align-items:center; gap:10px;
+  background:var(--card); border:1px solid var(--card-border);
+  border-radius:14px; padding:9px 14px; color:var(--ink-faint);
+  cursor:pointer; min-width:220px; transition:border-color .15s var(--ease), background .15s var(--ease);
+}
+.search-pill:hover{background:var(--card-hi); border-color:rgba(16,68,128,0.19);}
+.search-pill svg{width:16px;height:16px; flex-shrink:0;}
+.search-pill .kbd{
+  margin-left:auto; font-size:11px; padding:2px 6px; border-radius:6px;
+  background:rgba(16,68,128,0.11); color:var(--ink-faint); font-weight:600;
+}
+
+/* ---------- Cards ---------- */
+.card{
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:var(--radius);
+  padding:18px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 1px 0 rgba(255,255,255,0.5) inset, 0 14px 28px -22px rgba(16,68,128,0.18);
+  transition:transform .18s var(--ease), background .18s var(--ease), border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+@media (hover:hover){
+  .card.clickable:hover{transform:translateY(-2px); background:var(--card-hi); border-color:rgba(16,68,128,0.2); box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 34px -22px rgba(16,68,128,0.22);}
+}
+.card.clickable{cursor:pointer;}
+.card + .card{margin-top:12px;}
+.section{margin-top:34px;}
+.section:first-child{margin-top:0;}
+.section-head{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px; padding:0 2px;
+}
+.section-title{
+  font-size:12.5px; text-transform:uppercase; letter-spacing:.1em;
+  color:var(--ink-faint); font-weight:700;
+}
+.section-link{font-size:13px; color:var(--teal); font-weight:600; background:none; border:none; cursor:pointer;}
+
+.grid{display:grid; grid-template-columns:1fr; gap:12px;}
+@media (min-width:700px){ .grid.cols-2{grid-template-columns:1fr 1fr;} }
+@media (min-width:960px){ .grid.cols-3{grid-template-columns:1fr 1fr 1fr;} }
+
+/* ---------- Status pills ---------- */
+.status-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11.5px; font-weight:700; padding:4px 10px 4px 8px; border-radius:999px;
+  letter-spacing:.02em; white-space:nowrap;
+}
+.status-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0;}
+.status-green{background:rgba(116,139,103,0.14); color:var(--green);}
+.status-green .status-dot{background:var(--green); box-shadow:0 0 4px rgba(116,139,103,.4);}
+.status-yellow{background:rgba(190,91,61,0.14); color:var(--yellow);}
+.status-yellow .status-dot{background:var(--yellow); box-shadow:0 0 4px rgba(190,91,61,.4);}
+.status-red{background:rgba(162,59,46,0.14); color:var(--red);}
+.status-red .status-dot{background:var(--red); box-shadow:0 0 4px rgba(162,59,46,.4);}
+.status-blue{background:rgba(79,141,255,0.14); color:var(--blue);}
+.status-blue .status-dot{background:var(--blue); box-shadow:0 0 4px rgba(79,141,255,.4);}
+.status-gray{background:rgba(138,146,160,0.14); color:var(--gray);}
+.status-gray .status-dot{background:var(--gray);}
+
+/* ---------- Bottom nav (mobile) — Wedding Team STRUCTURE, charcoal chrome ---------- */
+.bottom-nav{
+  position:fixed; left:0; right:0; bottom:0; z-index:40;
+  display:flex; justify-content:space-around; align-items:center;
+  height:calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);
+  background:rgba(33,28,24,0.94);
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--chrome-border);
+}
+.nav-btn{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:none; border:none; color:var(--chrome-ink-dim);
+  font-size:11px; font-weight:600; padding:8px 10px; border-radius:12px;
+  flex:1; max-width:110px; cursor:pointer; transition:color .15s var(--ease);
+}
+.nav-btn svg{width:22px; height:22px;}
+.nav-btn.active{color:var(--chrome-gold);}
+.nav-btn:active{transform:scale(.94);}
+
+/* ---------- Desktop sidebar — Wedding Team STRUCTURE ----------
+   A refined charcoal/near-black structure (requirement 8) framing the
+   ivory reading surfaces in .app-main. A faint, restrained gold glow at
+   the top (via ::before, ~6% opacity) and a hairline border are the only
+   "depth" touches — no glow, no gradient noise, no ornamental clutter. */
+/* position:fixed (not sticky) so the sidebar reliably spans the full
+   viewport height and travels with scroll with zero gap, matching the
+   team site's sidebar fix. Sticky's reference box is the nearest
+   scrolling ancestor, and can silently misbehave if that ever changes
+   from the viewport; fixed is always relative to the viewport, so
+   the page scrolls. `.app-main` gets an equal `margin-left` below to
+   avoid running under it (see the min-width:860px block) — page
+   scrolling itself is untouched, since that was never sidebar-driven. */
+.sidebar{
+  display:none;
+  width:230px; flex-shrink:0;
+  padding:22px 14px; border-right:1px solid var(--chrome-border);
+  position:fixed; top:0; left:0; height:100vh; overflow-y:auto; z-index:15;
+  flex-direction:column; gap:4px;
+  background:var(--chrome-bg);
+}
+.sidebar::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:220px;
+  background:radial-gradient(340px 220px at 20% -10%, rgba(122,183,255,0.10), transparent 70%);
+  pointer-events:none;
+}
+.sidebar .brand{padding:6px 10px 22px; position:relative;}
+.side-btn{
+  display:flex; align-items:center; gap:12px;
+  padding:11px 12px; border-radius:12px; border:none; background:none;
+  color:var(--chrome-ink-dim); font-size:14.5px; font-weight:600; cursor:pointer;
+  text-align:left; transition:background .15s var(--ease), color .15s var(--ease);
+  position:relative;
+}
+.side-btn svg{width:19px; height:19px; flex-shrink:0;}
+.side-btn:hover{background:var(--chrome-bg-2); color:var(--chrome-ink);}
+.side-btn.active{background:rgba(122,183,255,0.13); color:var(--chrome-gold);}
+/* A slim gold indicator bar on the active item — a fine border, not a glow. */
+.side-btn.active::before{
+  content:""; position:absolute; left:-14px; top:9px; bottom:9px; width:3px;
+  border-radius:0 3px 3px 0; background:var(--chrome-gold);
+}
+.side-search{
+  margin-top:18px;
+}
+.sidebar .search-pill{
+  background:var(--chrome-bg-2); border:1px solid var(--chrome-border); color:var(--chrome-ink-dim);
+}
+.sidebar .search-pill:hover{background:#123a67; border-color:rgba(255,255,255,0.14);}
+.sidebar .search-pill .kbd{background:rgba(255,255,255,0.08); color:var(--chrome-ink-dim);}
+.side-footer{margin-top:auto; padding:10px; font-size:11.5px; color:var(--chrome-ink-dim); line-height:1.5;}
+.sidebar .demo-badge{background:rgba(122,183,255,0.14); border-color:rgba(122,183,255,0.5); color:var(--chrome-gold);}
+.sidebar .demo-badge-dot{background:var(--chrome-gold); box-shadow:0 0 4px rgba(122,183,255,.45);}
+
+@media (min-width:860px){
+  .bottom-nav{display:none;}
+  .sidebar{display:flex;}
+  .topbar{display:none;}
+  .view{padding:32px 40px 60px; max-width:1080px;}
+  .search-pill{display:flex;}
+  /* .sidebar is position:fixed (see its rule above) and so no longer
+     takes up space in #app's normal flex flow — reserve that same 230px
+     on .app-main directly so content never runs under the fixed sidebar. */
+  .app-main{margin-left:230px;}
+}
+
+/* ---------- Hero card ---------- */
+.hero{
+  border-radius:28px;
+  padding:28px 24px 24px;
+  background:linear-gradient(160deg, rgba(23,105,224,0.12), rgba(79,141,255,0.07) 55%, rgba(255,255,255,0.5));
+  border:1px solid rgba(16,68,128,0.10);
+  box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 24px 48px -30px rgba(16,68,128,0.22);
+  position:relative; overflow:hidden;
+}
+/* Restrained mandala-corner ornament — a wedding-editorial touch, kept
+   faint (8% opacity) so it never competes with the content in front of it.
+   Blue, matching the guest hero's equivalent ornament (see .guest-hero::before). */
+.hero::after{
+  content:""; position:absolute; top:-44px; right:-44px; width:220px; height:220px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%231769e0' stroke-width='1'%3E%3Ccircle cx='100' cy='100' r='90'/%3E%3Ccircle cx='100' cy='100' r='70'/%3E%3Ccircle cx='100' cy='100' r='50'/%3E%3C/g%3E%3Cg fill='%231769e0'%3E%3Ccircle cx='100' cy='10' r='3'/%3E%3Ccircle cx='153' cy='37' r='3'/%3E%3Ccircle cx='180' cy='90' r='3'/%3E%3Ccircle cx='167' cy='147' r='3'/%3E%3Ccircle cx='120' cy='180' r='3'/%3E%3Ccircle cx='60' cy='180' r='3'/%3E%3Ccircle cx='20' cy='147' r='3'/%3E%3Ccircle cx='7' cy='90' r='3'/%3E%3Ccircle cx='33' cy='37' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-size:contain;
+  opacity:0.07; pointer-events:none;
+}
+.hero::before{
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(460px 240px at 92% -12%, rgba(23,105,224,0.20), transparent 70%);
+  pointer-events:none;
+}
+.hero-eyebrow{
+  font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--teal); display:inline-flex; align-items:center; gap:7px; position:relative;
+  background:rgba(23,105,224,0.13); border:1px solid rgba(23,105,224,0.28);
+  padding:6px 12px 6px 10px; border-radius:999px;
+}
+.hero-eyebrow::before{
+  content:""; width:6px; height:6px; border-radius:50%; background:var(--teal); flex-shrink:0;
+  box-shadow:0 0 0 3px rgba(23,105,224,0.18);
+}
+.hero-eyebrow.is-live{ color:var(--blue); background:rgba(79,141,255,0.14); border-color:rgba(79,141,255,0.32); }
+.hero-eyebrow.is-live::before{ background:var(--blue); box-shadow:0 0 0 3px rgba(79,141,255,0.2); animation:livePulse 1.8s ease-in-out infinite; }
+.hero-eyebrow.is-archive{ color:var(--ink-dim); background:rgba(16,68,128,0.08); border-color:rgba(16,68,128,0.15); }
+.hero-eyebrow.is-archive::before{ background:var(--ink-faint); box-shadow:none; }
+@keyframes livePulse{
+  0%,100%{ box-shadow:0 0 0 3px rgba(79,141,255,0.2); }
+  50%{ box-shadow:0 0 0 6px rgba(79,141,255,0.08); }
+}
+.hero-big{
+  font-family:var(--serif); font-size:38px; font-weight:700; letter-spacing:-.01em; line-height:1.1;
+  margin-top:14px; position:relative;
+}
+.hero-sub{font-size:15.5px; color:var(--ink-dim); margin-top:9px; position:relative; line-height:1.5;}
+.hero-rows{margin-top:22px; display:flex; flex-direction:column; gap:10px; position:relative;}
+.hero-row{
+  display:flex; align-items:center; gap:13px;
+  background:rgba(16,68,128,0.065); border:1px solid rgba(16,68,128,0.09);
+  border-radius:15px; padding:12px 14px;
+}
+.hero-row-icon{
+  width:34px; height:34px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(23,105,224,0.12); color:var(--teal);
+}
+.hero-row-icon svg{width:17px; height:17px;}
+.hero-row-text{min-width:0;}
+.hero-row-label{font-size:11px; color:var(--ink-faint); font-weight:600; text-transform:uppercase; letter-spacing:.05em;}
+.hero-row-value{font-size:14.5px; font-weight:600; margin-top:2px; line-height:1.4;}
+.hero-actions{margin-top:20px; display:flex; gap:10px; flex-wrap:wrap; position:relative;}
+
+/* ---------- Timeline ---------- */
+.tl-list{position:relative; padding-left:26px;}
+.tl-list::before{
+  content:""; position:absolute; left:9px; top:6px; bottom:6px; width:2px;
+  background:linear-gradient(180deg, rgba(23,105,224,0.5), rgba(16,68,128,0.08));
+  border-radius:2px;
+}
+.tl-item{position:relative; padding-bottom:14px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-dot{
+  position:absolute; left:-26px; top:20px; width:18px; height:18px; border-radius:50%;
+  background:var(--bg-2); border:3px solid var(--gray); display:flex; align-items:center; justify-content:center;
+}
+.tl-item.is-complete .tl-dot{border-color:var(--green);}
+.tl-item.is-current .tl-dot{border-color:var(--teal); box-shadow:0 0 0 5px rgba(23,105,224,0.18);}
+.tl-item.is-tbd .tl-dot{border-color:var(--ink-faint); border-style:dashed;}
+.tl-card{padding:14px 16px;}
+.tl-item.is-current .tl-card{border-color:rgba(23,105,224,0.45); background:rgba(23,105,224,0.09);}
+.tl-item.is-complete .tl-card{opacity:.62;}
+.tl-top{display:flex; align-items:center; gap:10px; justify-content:space-between; flex-wrap:wrap;}
+.tl-time{font-size:13px; font-weight:700; color:var(--ink-dim); font-variant-numeric:tabular-nums;}
+.tl-title{font-size:16px; font-weight:700; margin-top:3px;}
+.tl-meta{font-size:12.5px; color:var(--ink-faint); margin-top:4px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+/* RANDOM-PAGE CLARITY CORRECTION PASS: the row's old inline expand
+   (.tl-detail/.tl-detail-inner/.tl-detail-row, toggled via .expanded) is
+   gone — the whole row now opens the Timeline-Moment drawer directly, so
+   there is no second, duplicate detail surface to collapse/expand here.
+   .tl-actions stays defined; it is still used by the Day-Of transport
+   card's own action row, just no longer by this one. */
+.tl-top-right{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+.tl-chevron{display:flex; color:var(--ink-faint); opacity:.55; flex-shrink:0;}
+.tl-chevron svg{width:15px; height:15px;}
+.tl-card.clickable:hover .tl-chevron{opacity:.9;}
+.tl-shown-as{font-size:11.5px; color:var(--ink-faint); display:inline-flex; align-items:center; gap:4px;}
+.tl-shown-as .chip{padding:1px 8px; font-size:11px;}
+.tl-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;}
+
+.day-tabs{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:18px; -webkit-overflow-scrolling:touch;}
+.day-tab{
+  flex-shrink:0; padding:9px 15px; border-radius:12px; border:1px solid var(--card-border);
+  background:var(--card); color:var(--ink-dim); font-size:13.5px; font-weight:600; cursor:pointer;
+  white-space:nowrap; transition:all .15s var(--ease);
+}
+.day-tab.active{background:var(--teal); color:var(--on-accent); border-color:var(--teal);}
+
+/* ---------- Timeline: kind, audience, rollup ---------- */
+.tl-dot svg{width:9px; height:9px; color:var(--ink-faint); stroke-width:2.6;}
+.tl-item.is-current .tl-dot svg{color:var(--teal);}
+.tl-item.is-complete .tl-dot svg{color:var(--green);}
+.tl-dur{margin-left:8px; font-weight:600; color:var(--ink-faint); letter-spacing:.01em;}
+.tl-kind{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+  color:var(--teal); opacity:.85;
+}
+.tl-aud{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  padding:2px 7px; border-radius:999px; border:1px solid var(--card-border); color:var(--ink-faint);
+}
+.tl-assignee{
+  font-size:11.5px; font-weight:650; color:var(--ink-dim);
+  padding:1px 8px 1px 6px; border-radius:999px; background:rgba(16,68,128,0.07);
+}
+.tl-aud.aud-ops{color:var(--ink-faint); border-color:rgba(16,68,128,0.13);}
+.tl-aud.aud-internal{color:var(--blue); border-color:rgba(79,141,255,0.32);}
+.tl-rollup{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  padding:2px 7px; border-radius:999px; background:rgba(23,105,224,0.13); color:var(--teal);
+}
+/* Rollup children: one level deep, nested under the moment guests actually see. */
+.tl-children{position:relative; margin:-6px 0 14px 20px; padding-left:20px;}
+.tl-children::before{
+  content:""; position:absolute; left:1px; top:0; bottom:14px; width:2px;
+  background:rgba(16,68,128,0.09); border-radius:2px;
+}
+.tl-children .tl-item{padding-bottom:8px;}
+.tl-children .tl-dot{left:-20px; top:16px; width:13px; height:13px; border-width:2px;}
+.tl-children .tl-dot svg{width:7px; height:7px;}
+.tl-children .tl-card{padding:10px 13px; background:rgba(16,68,128,0.035);}
+.tl-children .tl-title{font-size:14px;}
+
+.aud-tabs{display:flex; gap:7px; align-items:center; margin:-8px 0 18px; flex-wrap:wrap;}
+.aud-tabs-label{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+  color:var(--ink-faint); margin-right:2px;
+}
+.aud-tab{
+  padding:5px 12px; border-radius:999px; border:1px solid var(--card-border);
+  background:transparent; color:var(--ink-faint); font-size:12px; font-weight:600; cursor:pointer;
+  transition:all .15s var(--ease);
+}
+.aud-tab:hover{color:var(--ink-dim); border-color:rgba(16,68,128,0.19);}
+.aud-tab.active{background:rgba(23,105,224,0.13); color:var(--teal); border-color:rgba(23,105,224,0.4);}
+/* The Guest-preview toggle is deliberately the secondary option, never the
+   equal-weight sibling a 3-tab bar implied — plain-text weight, border
+   only when it's the one currently active. */
+.aud-tab-secondary{border-color:transparent; text-decoration:underline; text-decoration-color:rgba(118,103,87,0.35); text-underline-offset:2px;}
+.aud-tab-secondary.active{background:rgba(79,141,255,0.1); color:var(--blue); border-color:rgba(79,141,255,0.32); text-decoration:none;}
+.section-sub{font-size:12.5px; color:var(--ink-faint); font-weight:600;}
+
+/* ---------- Planning workspace ---------- */
+.planning-hero{padding:24px 26px; margin-bottom:20px;}
+.planning-hero-q{font-size:19px; font-weight:700; letter-spacing:-.01em;}
+.planning-stats{display:flex; gap:34px; margin-top:18px; flex-wrap:wrap;}
+.pstat{display:flex; flex-direction:column; gap:3px;}
+.pstat-n{font-size:27px; font-weight:700; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums;}
+.pstat.warn .pstat-n{color:var(--yellow);}
+.pstat-l{font-size:11.5px; color:var(--ink-faint); font-weight:600; text-transform:uppercase; letter-spacing:.05em;}
+
+.pfilters{display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap;}
+.pfilter{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 14px; border-radius:12px; border:1px solid var(--card-border);
+  background:var(--card); color:var(--ink-dim); font-size:13px; font-weight:600; cursor:pointer;
+  transition:all .15s var(--ease);
+}
+.pfilter:hover{border-color:rgba(16,68,128,0.19);}
+.pfilter.active{background:var(--teal); color:var(--on-accent); border-color:var(--teal);}
+.pfilter-n{font-size:11px; font-weight:700; opacity:.6;}
+
+.pgroup{margin-bottom:26px;}
+.pgroup-head{display:flex; align-items:center; gap:10px; margin-bottom:10px; padding:0 2px;}
+.pgroup-title{font-size:12.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-faint); font-weight:700;}
+.pgroup-count{
+  font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:999px;
+  background:rgba(16,68,128,0.08); color:var(--ink-faint);
+}
+.pgroup-list{display:flex; flex-direction:column; gap:8px;}
+
+.ptask{
+  display:flex; align-items:flex-start; gap:13px; padding:14px 16px;
+  border-radius:14px; border:1px solid var(--card-border); background:var(--card);
+  position:relative; overflow:hidden; transition:all .15s var(--ease);
+}
+.ptask:hover{border-color:rgba(16,68,128,0.19); background:rgba(16,68,128,0.055);}
+.ptask.is-blocking::before{content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--yellow);}
+.ptask.is-done{opacity:.5;}
+.ptask.is-dismissed{opacity:.45;}
+.ptask-mark{width:17px; height:17px; flex-shrink:0; margin-top:1px; color:var(--ink-faint);}
+.ptask.is-blocking .ptask-mark{color:var(--yellow);}
+.ptask.is-done .ptask-mark{color:var(--green);}
+.ptask-mark svg{width:17px; height:17px;}
+.ptask-body{flex:1; min-width:0;}
+.ptask-title{font-size:14.5px; font-weight:650; line-height:1.4;}
+.ptask.is-done .ptask-title{text-decoration:line-through; text-decoration-color:rgba(16,68,128,0.26);}
+.ptask-meta{font-size:12px; color:var(--ink-faint); margin-top:4px; display:flex; gap:5px; flex-wrap:wrap;}
+.ptask-group{font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:10.5px; color:var(--teal); opacity:.8;}
+.ptask-warn{color:var(--yellow);}
+
+.pdecision{padding:16px 18px; margin-bottom:8px;}
+.pdecision-title{font-size:15px; font-weight:700;}
+.pdecision-q{font-size:13px; color:var(--ink-faint); margin-top:5px; line-height:1.45;}
+.pdecision-opts{display:flex; gap:6px; flex-wrap:wrap; margin-top:11px;}
+
+/* ---------- Studio ---------- */
+.studio-back{
+  display:inline-flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer;
+  color:var(--ink-faint); font-size:13px; font-weight:600; padding:0; margin-bottom:18px;
+  transition:color .15s var(--ease);
+}
+.studio-back svg{width:15px; height:15px; transform:rotate(180deg);}
+.studio-back:hover{color:var(--ink-dim);}
+
+.studio-head{margin-bottom:20px;}
+.studio-head-row{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+.studio-head-actions{display:flex; gap:8px; flex-wrap:wrap;}
+.studio-card-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px;}
+.studio-card-add{
+  flex-shrink:0; background:none; border:none; cursor:pointer; color:var(--ink-faint);
+  font-size:11.5px; font-weight:700; padding:2px 4px; transition:color .15s var(--ease);
+}
+.studio-card-add:hover{color:var(--teal);}
+.studio-head-eyebrow{font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--teal);}
+.studio-head-title{font-family:var(--serif); font-size:26px; font-weight:700; letter-spacing:-.01em; margin-top:6px;}
+.studio-head-sub{font-size:13.5px; color:var(--ink-faint); margin-top:7px;}
+
+.studio-focus{
+  padding:22px 24px; margin-bottom:22px; border-left:3px solid var(--card-border);
+}
+.studio-focus.is-blocked{border-left-color:var(--red); background:linear-gradient(90deg, rgba(162,59,46,0.06), var(--card) 40%);}
+.studio-focus.is-attention{border-left-color:var(--yellow); background:linear-gradient(90deg, rgba(190,91,61,0.06), var(--card) 40%);}
+.studio-focus.is-clear{border-left-color:var(--green);}
+.studio-focus-eyebrow{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint);}
+.studio-focus-title{font-size:19px; font-weight:700; margin-top:6px; letter-spacing:-.01em;}
+.studio-focus-sub{font-size:13.5px; color:var(--ink-dim); margin-top:6px;}
+.studio-focus .btn{margin-top:14px;}
+
+.studio-grid{display:grid; grid-template-columns:1fr; gap:14px;}
+@media (min-width:760px){ .studio-grid{grid-template-columns:1fr 1fr;} }
+@media (min-width:1180px){ .studio-grid{grid-template-columns:1fr 1fr 1fr;} }
+
+.studio-card{
+  padding:18px 20px; border-radius:16px; border:1px solid var(--card-border); background:var(--card);
+  position:relative;
+}
+.studio-card.is-blocking{border-color:rgba(162,59,46,0.35);}
+.studio-card-title{
+  font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-dim);
+  display:flex; align-items:center; gap:8px; margin-bottom:12px;
+}
+.studio-card-title svg{width:14px; height:14px; flex-shrink:0; color:var(--ink-faint);}
+.studio-card-count{
+  font-size:11px; font-weight:700; padding:1px 8px; border-radius:999px;
+  background:rgba(16,68,128,0.09); color:var(--ink-faint); margin-left:auto;
+}
+.studio-card-hint{font-size:11.5px; color:var(--ink-faint); margin:-7px 0 11px; line-height:1.4;}
+.studio-card .pgroup-list{gap:7px;}
+.studio-card-more{
+  display:flex; align-items:center; justify-content:center; gap:4px; width:100%;
+  margin-top:10px; padding:8px; border-radius:10px; border:1px dashed var(--card-border);
+  background:none; color:var(--ink-faint); font-size:12px; font-weight:600; cursor:pointer;
+  transition:all .15s var(--ease);
+}
+.studio-card-more svg{width:13px; height:13px;}
+.studio-card-more:hover{color:var(--teal); border-color:rgba(23,105,224,0.35);}
+.studio-empty{font-size:13px; color:var(--ink-faint); line-height:1.5;}
+.studio-warn{font-size:13px; color:var(--yellow); line-height:1.5;}
+
+.studio-progress{margin-top:2px;}
+.studio-progress-bar{height:8px; border-radius:999px; background:rgba(16,68,128,0.09); overflow:hidden;}
+.studio-progress-fill{height:100%; border-radius:999px; background:linear-gradient(90deg, var(--teal-dim), var(--teal)); transition:width .3s var(--ease);}
+.studio-progress-label{font-size:12.5px; color:var(--ink-faint); margin-top:9px; font-weight:600;}
+
+.studio-events-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (min-width:700px){ .studio-events-grid{grid-template-columns:repeat(3,1fr);} }
+@media (min-width:1180px){ .studio-events-grid{grid-template-columns:repeat(6,1fr);} }
+.studio-event-card{
+  padding:15px 16px; border-radius:14px; border:1px solid var(--card-border); background:var(--card);
+  display:flex; flex-direction:column; gap:8px; transition:all .15s var(--ease); cursor:pointer;
+}
+.studio-event-card:hover{border-color:rgba(16,68,128,0.21); transform:translateY(-1px);}
+.studio-event-card-date{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint);}
+.studio-event-card-title{font-size:14.5px; font-weight:650; line-height:1.35;}
+.studio-event-card .status-pill{align-self:flex-start;}
+
+.studio-completed{margin-top:28px;}
+.studio-completed-toggle{
+  display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer;
+  color:var(--ink-faint); font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:0;
+}
+.studio-completed-toggle svg{width:13px; height:13px; transition:transform .2s var(--ease);}
+.studio-completed-toggle.open svg{transform:rotate(90deg);}
+.studio-completed-list{display:none; flex-direction:column; gap:2px; margin-top:12px;}
+.studio-completed-list.open{display:flex;}
+.studio-completed-row{
+  display:flex; justify-content:space-between; gap:12px; padding:9px 2px;
+  border-bottom:1px solid rgba(16,68,128,0.07); font-size:13px; color:var(--ink-faint);
+}
+.studio-completed-row span:first-child{color:var(--ink-dim);}
+.studio-completed-date{flex-shrink:0; font-variant-numeric:tabular-nums;}
+
+.studio-event-head{margin-bottom:22px;}
+.studio-event-head-eyebrow{font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--teal);}
+.studio-event-head-title{font-family:var(--serif); font-size:27px; font-weight:700; letter-spacing:-.01em; margin:6px 0 10px;}
+.studio-event-head-meta{display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:13.5px; color:var(--ink-dim);}
+.studio-event-head-facts{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px;}
+.hub-fact{
+  font-size:12px; font-weight:650; padding:5px 11px; border-radius:999px;
+  background:rgba(16,68,128,0.08); color:var(--ink-dim);
+}
+
+.hub-primary-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:22px;}
+
+.hub-dest-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+@media (min-width:700px){ .hub-dest-grid{grid-template-columns:1fr 1fr;} }
+@media (min-width:1180px){ .hub-dest-grid{grid-template-columns:repeat(3,1fr);} }
+.hub-dest-card{
+  padding:18px 20px; border-radius:16px; border:1px solid var(--card-border); background:var(--card);
+  display:flex; flex-direction:column; gap:8px; transition:all .15s var(--ease); cursor:pointer;
+}
+.hub-dest-card:hover{border-color:rgba(16,68,128,0.21); transform:translateY(-1px);}
+.hub-dest-card-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.hub-dest-card-label{font-size:14.5px; font-weight:700;}
+.hub-dest-card-summary{font-size:12.5px; color:var(--ink-faint); line-height:1.45;}
+
+.studio-contact-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0;
+  border-bottom:1px solid rgba(16,68,128,0.07);
+}
+.studio-contact-row:last-child{border-bottom:none;}
+.studio-contact-name{font-size:13.5px; font-weight:650;}
+.studio-contact-role{font-size:11.5px; color:var(--ink-faint); margin-top:1px;}
+
+/* ---------- Mission's progressive-disclosure planning panel ---------- */
+.mission-planning-panel{
+  padding:16px; border-radius:20px; border:1px solid var(--card-border); background:rgba(16,68,128,0.04);
+}
+.mission-panel-row{display:grid; grid-template-columns:1fr; gap:18px; margin-top:18px;}
+@media (min-width:700px){ .mission-panel-row{grid-template-columns:1fr 1fr;} }
+.mission-panel-col .section-head{margin-bottom:8px;}
+.mission-panel-actions{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;}
+
+/* ---------- Event-first Timeline ---------- */
+.timeline-event-grid .timeline-event-card{position:relative;}
+.timeline-event-card-sub{font-size:12px; color:var(--ink-faint);}
+.timeline-event-card.is-live{border-color:rgba(79,141,255,0.5); box-shadow:0 0 0 1px rgba(79,141,255,0.25);}
+.timeline-event-live-pill{position:static; align-self:flex-start; max-width:100%;}
+.timeline-event-tabs{overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap;}
+
+/* ---------- Demo clock indicator ----------
+   Deliberately loud (amber, dashed) so it can never be mistaken for a real
+   "live" status pill (which uses blue/teal) — internal-only, never rendered
+   in the guest shell. */
+.demo-badge{
+  display:inline-flex; align-items:center; gap:7px; padding:5px 11px; border-radius:999px;
+  background:rgba(217,138,10,0.12); border:1px dashed rgba(217,138,10,0.55);
+  color:#8a5608; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  white-space:nowrap; cursor:default;
+}
+.demo-badge-dot{width:6px; height:6px; border-radius:50%; background:#8a5608; box-shadow:0 0 4px rgba(217,138,10,.45); flex-shrink:0;}
+.demo-badge-hero{margin-bottom:12px;}
+.demo-badge-compact{padding:4px 8px; font-size:9.5px; gap:5px; max-width:92px; min-width:0; overflow:hidden; text-overflow:ellipsis;}
+.demo-badge-compact .demo-badge-dot{width:5px; height:5px;}
+/* Mobile topbar: brand + compact badge + 3 icon buttons must all fit at
+   narrow widths (390px and below) without horizontal overflow — the badge
+   above is capped/truncated and the brand text truncates here so none of
+   the icon buttons (including search, the rightmost) get pushed off-screen. */
+.topbar .brand{min-width:0; flex-shrink:1;}
+.topbar .brand-text{min-width:0; overflow:hidden;}
+.topbar .brand-title, .topbar .brand-sub{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.topbar-actions{flex-shrink:0;}
+
+/* ---------- Ops shell footer: status + escape hatches (charcoal chrome) ---------- */
+.side-footer{display:flex; flex-direction:column; gap:8px; align-items:flex-start;}
+.side-footer-status{font-size:11.5px; color:var(--chrome-ink-dim); line-height:1.5;}
+.side-footer-link{
+  display:inline-flex; align-items:center; gap:6px;
+  background:none; border:none; padding:0; margin:0; cursor:pointer;
+  color:var(--chrome-ink-dim); font-size:11px; text-decoration:underline; text-underline-offset:3px;
+}
+.side-footer-link svg{width:15px; height:15px; flex-shrink:0;}
+.side-footer-link:hover{color:var(--chrome-ink);}
+
+/* The role-choice welcome gate was removed (10-SECOND EXPERIENCE milestone,
+   requirement 7 — GUEST-FIRST ENTRY): new sessions open directly into
+   Guest, so its .welcome-* styles were retired along with it. */
+
+/* Planning controls inside drawers */
+.pinput{
+  width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--card-border);
+  background:rgba(16,68,128,0.08); color:var(--ink); font-size:13.5px; font-family:inherit;
+}
+.pinput:focus{outline:none; border-color:rgba(23,105,224,0.5);}
+.presolve{margin-top:14px;}
+.presolve-label{display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-faint); margin-bottom:6px;}
+.nt-context{
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12.5px; font-weight:650;
+  color:var(--ink-dim); margin-top:12px; padding:8px 12px; border-radius:10px; background:rgba(16,68,128,0.06);
+}
+.nt-context .chip{cursor:default; padding:3px 9px;}
+.phowclose{font-size:13.5px; color:var(--ink-dim); line-height:1.55;}
+.phowclose b{color:var(--teal); font-weight:650;}
+.pdismissed{font-size:12.5px; color:var(--ink-faint); margin-top:10px; font-style:italic;}
+.pcheckgrid{display:flex; flex-wrap:wrap; gap:7px;}
+.pcheck{
+  display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px;
+  border:1px solid var(--card-border); background:rgba(16,68,128,0.05);
+  font-size:12.5px; color:var(--ink-dim); cursor:pointer; transition:all .15s var(--ease);
+}
+.pcheck input{accent-color:var(--teal); margin:0;}
+.pcheck.on{background:rgba(23,105,224,0.12); color:var(--teal); border-color:rgba(23,105,224,0.4);}
+.poption{
+  padding:12px 14px; border-radius:12px; border:1px solid var(--card-border);
+  background:rgba(16,68,128,0.04); margin-bottom:7px; cursor:pointer; transition:all .15s var(--ease);
+}
+.poption:hover{border-color:rgba(16,68,128,0.21);}
+.poption.picked{border-color:rgba(23,105,224,0.5); background:rgba(23,105,224,0.09);}
+.poption.chosen{border-color:rgba(116,139,103,0.4); background:rgba(116,139,103,0.07);}
+.poption-label{font-size:13.5px; font-weight:650;}
+.poption-note{font-size:12.5px; color:var(--ink-faint); margin-top:4px; line-height:1.45;}
+.pnote{padding:11px 13px; border-radius:11px; background:rgba(16,68,128,0.055); margin-bottom:7px;}
+.pnote-body{font-size:13px; color:var(--ink-dim); line-height:1.5;}
+.pnote-meta{font-size:11px; color:var(--ink-faint); margin-top:5px;}
+.pnote-add{display:flex; gap:7px; margin-top:10px;}
+.pnote-add .pinput{flex:1;}
+.drawer-src{font-size:11.5px; color:var(--ink-faint); margin-left:8px;}
+
+/* ---------- Assignments & briefs ---------- */
+.passignee-row{display:flex; gap:7px;}
+.passignee-id{flex:1;}
+select.pinput{appearance:none; cursor:pointer;}
+
+.arole{
+  display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em; padding:3px 9px; border-radius:999px;
+  border:1px solid var(--card-border); color:var(--ink-faint); flex-shrink:0;
+}
+.arole.role-primary{color:var(--teal); border-color:rgba(23,105,224,0.35); background:rgba(23,105,224,0.08);}
+.arole.role-backup{color:var(--ink-dim);}
+.arole.role-supporting{color:var(--ink-dim);}
+.arole.role-vendorLiaison{color:var(--blue); border-color:rgba(79,141,255,0.32);}
+.arole.role-familyCoordinator{color:#7b4985; border-color:rgba(123,73,133,0.32);}
+
+.aresp{
+  display:flex; align-items:flex-start; gap:11px; padding:12px 14px;
+  border-radius:12px; border:1px solid var(--card-border); background:rgba(16,68,128,0.04);
+  margin-bottom:7px;
+}
+.aresp-body{flex:1; min-width:0;}
+.aresp-title{font-size:13.5px; font-weight:650; line-height:1.4;}
+.aresp-title a, .aresp-title .chip{margin:0;}
+.aresp-meta{font-size:11.5px; color:var(--ink-faint); margin-top:4px;}
+.aresp-instr{font-size:12.5px; color:var(--ink-dim); margin-top:6px; line-height:1.5; font-style:italic;}
+.aresp-actions{display:flex; align-items:center; gap:8px; margin-top:9px; flex-wrap:wrap;}
+.aresp-actions .btn{padding:5px 11px; font-size:12px;}
+.aresp-state{font-size:11.5px; color:var(--teal); font-weight:650;}
+
+/* Day Of — "Up Next" card in a Personal Brief */
+.updnext-card{
+  padding:13px 15px; border-radius:14px; background:rgba(23,105,224,0.08);
+  border:1px solid rgba(23,105,224,0.25);
+}
+.updnext-title{font-size:15px; font-weight:750; color:var(--ink);}
+.updnext-meta{font-size:12.5px; color:var(--teal); margin-top:4px; font-weight:600;}
+
+/* Day Of — Timeline day status strip */
+.day-status-strip{
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:11px 15px; margin-bottom:16px; border-radius:12px;
+  background:var(--card); border:1px solid var(--card-border);
+  font-size:12.5px; color:var(--ink-dim);
+}
+.dss-item b{color:var(--ink); font-weight:750;}
+.dss-item.is-current{color:var(--teal); font-weight:650;}
+.dss-item.is-linked{color:var(--ink-dim); font-weight:650;}
+
+.abrief-today-toggle{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:10px 13px; border-radius:12px; background:rgba(23,105,224,0.07);
+  border:1px solid rgba(23,105,224,0.22); margin-bottom:12px; font-size:12.5px; color:var(--teal); font-weight:650;
+}
+.abrief-today-toggle button{
+  background:none; border:1px solid rgba(23,105,224,0.4); color:var(--teal);
+  padding:4px 11px; border-radius:999px; font-size:11.5px; font-weight:700; cursor:pointer;
+}
+.abrief-empty{font-size:12.5px; color:var(--ink-faint); padding:4px 2px;}
+
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  padding:10px 15px; border-radius:12px; border:1px solid var(--card-border);
+  background:rgba(16,68,128,0.08); color:var(--ink); font-size:13.5px; font-weight:600;
+  cursor:pointer; transition:transform .15s var(--ease), background .15s var(--ease);
+  min-height:40px;
+}
+.btn svg{width:15px; height:15px;}
+.btn:hover{background:rgba(16,68,128,0.15); transform:translateY(-1px);}
+.btn:active{transform:translateY(0);}
+.btn-primary{background:linear-gradient(135deg, var(--teal), var(--teal-dim)); color:var(--on-accent); border-color:transparent; font-weight:700;}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-danger{background:rgba(162,59,46,0.14); color:var(--red); border-color:rgba(162,59,46,0.3);}
+.btn-block{width:100%;}
+.btn-sm{padding:7px 11px; font-size:12.5px; min-height:34px;}
+.btn-text{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  background:none; border:none; color:var(--teal); font-size:13px; font-weight:650;
+  cursor:pointer; padding:8px 4px; min-height:34px; transition:opacity .15s var(--ease);
+}
+.btn-text:hover{opacity:.75;}
+
+.quick-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:11px;}
+@media (min-width:700px){.quick-grid{grid-template-columns:repeat(4,1fr);}}
+.quick-btn{
+  display:flex; flex-direction:column; align-items:flex-start; gap:13px;
+  padding:17px 15px; border-radius:17px; border:1px solid var(--card-border);
+  background:var(--card); color:var(--ink); cursor:pointer; text-align:left;
+  box-shadow:0 1px 0 rgba(255,255,255,0.5) inset, 0 14px 28px -24px rgba(16,68,128,0.18);
+  transition:transform .15s var(--ease), background .15s var(--ease), border-color .15s var(--ease);
+}
+.quick-btn:hover{background:var(--card-hi); transform:translateY(-2px); border-color:rgba(16,68,128,0.19);}
+.quick-btn-icon{
+  width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  background:rgba(23,105,224,0.14); color:var(--teal);
+}
+.quick-btn-icon svg{width:17px; height:17px;}
+.quick-btn-label{font-size:13.5px; font-weight:700; line-height:1.3;}
+.quick-btn-count{font-size:22px; font-weight:700; letter-spacing:-.01em; font-variant-numeric:tabular-nums; margin-top:-4px;}
+.quick-btn-sub{font-size:12px; color:var(--ink-faint); line-height:1.4; font-weight:500; margin-top:-6px;}
+
+/* ---------- Vendor / person cards ---------- */
+.vcard{display:flex; align-items:center; gap:13px;}
+.avatar{
+  width:46px; height:46px; border-radius:13px; flex-shrink:0;
+  background:linear-gradient(135deg, rgba(23,105,224,0.35), rgba(79,141,255,0.35));
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;
+}
+.vcard-body{min-width:0; flex:1;}
+.vcard-name{font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.vcard-role{font-size:12.5px; color:var(--ink-faint); margin-top:1px;}
+.vcard-meta{font-size:12px; color:var(--ink-dim); margin-top:4px;}
+.vcard-actions{display:flex; gap:6px; flex-shrink:0;}
+.circle-btn{
+  width:36px; height:36px; border-radius:50%; border:1px solid var(--card-border);
+  background:rgba(16,68,128,0.08); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--ink-dim);
+}
+.circle-btn:hover{background:rgba(16,68,128,0.15); color:var(--ink);}
+.circle-btn svg{width:15px;height:15px;}
+
+/* ---------- Alerts ---------- */
+.alert-row{display:flex; align-items:flex-start; gap:13px;}
+.alert-icon{
+  width:32px; height:32px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  margin-top:1px;
+}
+.alert-icon svg{width:16px; height:16px;}
+.alert-text{font-size:14px; font-weight:600; line-height:1.45;}
+.alert-sub{font-size:12.5px; color:var(--ink-faint); margin-top:3px; line-height:1.4;}
+
+/* ---------- Directory ---------- */
+.dir-cat{
+  display:flex; align-items:center; gap:14px;
+}
+.dir-icon{
+  width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+  background:rgba(79,141,255,0.14); color:var(--blue); flex-shrink:0;
+}
+.dir-icon svg{width:19px; height:19px;}
+.dir-title{font-size:15.5px; font-weight:700;}
+.dir-count{font-size:12.5px; color:var(--ink-faint); margin-top:2px;}
+.dir-chev{margin-left:auto; color:var(--ink-faint); display:flex;}
+.dir-chev svg{width:17px; height:17px;}
+
+.subgrid{display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px;}
+@media (min-width:700px){.subgrid{grid-template-columns:1fr 1fr;}}
+
+/* ---------- Search overlay ---------- */
+.overlay{
+  position:fixed; inset:0; z-index:100; background:rgba(6,8,11,0.7);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  display:none; align-items:flex-start; justify-content:center;
+  padding:0; opacity:0; transition:opacity .18s var(--ease);
+}
+.overlay.open{display:flex; opacity:1;}
+.overlay-panel{
+  width:100%; max-width:640px; background:var(--bg-2); border:1px solid var(--card-border);
+  border-radius:0; box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  margin-top:0; max-height:100vh; display:flex; flex-direction:column;
+  transform:translateY(-8px); transition:transform .2s var(--ease);
+}
+.overlay.open .overlay-panel{transform:translateY(0);}
+@media (min-width:700px){
+  .overlay{padding:70px 20px;align-items:flex-start;}
+  .overlay-panel{border-radius:20px; max-height:74vh;}
+}
+.search-input-row{display:flex; align-items:center; gap:10px; padding:16px; border-bottom:1px solid var(--card-border);}
+.search-input-row svg{width:19px; height:19px; color:var(--ink-faint); flex-shrink:0;}
+#search-input{
+  flex:1; background:none; border:none; color:var(--ink); font-size:17px; outline:none;
+}
+#search-input::placeholder{color:var(--ink-faint);}
+.search-close{background:none; border:none; color:var(--ink-faint); font-size:13px; font-weight:600; cursor:pointer; padding:6px 8px;}
+.search-results{overflow-y:auto; padding:10px 8px 20px;}
+.search-group-title{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint); padding:12px 12px 6px;}
+.search-result{
+  display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:12px; cursor:pointer;
+}
+.search-result:hover, .search-result.active{background:var(--card-hi);}
+.search-result-icon{
+  width:36px; height:36px; border-radius:10px; background:rgba(16,68,128,0.08);
+  display:flex; align-items:center; justify-content:center; color:var(--ink-dim); flex-shrink:0;
+}
+.search-result-icon svg{width:16px; height:16px;}
+.search-result-title{font-size:14.5px; font-weight:700;}
+.search-result-sub{font-size:12px; color:var(--ink-faint); margin-top:1px;}
+.search-empty{padding:40px 20px; text-align:center; color:var(--ink-faint); font-size:14px;}
+
+/* ---------- Drawer ---------- */
+.drawer-overlay{
+  position:fixed; inset:0; z-index:110; background:rgba(6,8,11,0.6);
+  display:none; opacity:0; transition:opacity .2s var(--ease);
+}
+.drawer-overlay.open{display:block; opacity:1;}
+.drawer{
+  position:fixed; right:0; top:0; bottom:0; z-index:111;
+  width:100%; max-width:480px; background:var(--bg-2); border-left:1px solid var(--card-border);
+  transform:translateX(100%); transition:transform .22s var(--ease);
+  overflow-y:auto; padding:20px 20px calc(40px + var(--safe-bottom));
+}
+@media (max-width:520px){
+  .drawer{max-width:100%; top:auto; height:92vh; border-radius:24px 24px 0 0; transform:translateY(100%); border-left:none; border-top:1px solid var(--card-border);}
+  .drawer.open{transform:translateY(0)!important;}
+}
+.drawer.open{transform:translateX(0);}
+.drawer-close-row{display:flex; justify-content:flex-end;}
+.drawer-hero-icon{
+  width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  color:var(--teal); background:linear-gradient(135deg, rgba(23,105,224,0.25), rgba(79,141,255,0.25));
+  margin-bottom:16px;
+}
+.drawer-hero-icon svg{width:24px; height:24px;}
+.drawer-title{font-family:var(--serif); font-size:24px; font-weight:700; letter-spacing:-.005em;}
+.drawer-subtitle{font-size:14px; color:var(--ink-faint); margin-top:4px;}
+.drawer-section{margin-top:24px;}
+.drawer-section-title{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint); margin-bottom:10px;}
+.drawer-row{display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid rgba(16,68,128,0.08); font-size:14px;}
+.drawer-row:last-child{border-bottom:none;}
+.drawer-row-label{color:var(--ink-faint);}
+.drawer-row-value{font-weight:600; text-align:right;}
+.drawer-chip-row{display:flex; flex-wrap:wrap; gap:8px;}
+.chip{
+  font-size:12.5px; font-weight:600; padding:7px 12px; border-radius:10px;
+  background:rgba(16,68,128,0.08); border:1px solid var(--card-border); cursor:pointer;
+}
+.chip:hover{background:rgba(16,68,128,0.15);}
+.drawer-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:22px;}
+.drawer-actions-top{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+.drawer-actions-top .btn{flex:1 1 auto; min-width:120px;}
+
+/* RANDOM-PAGE CLARITY milestone: progressive-disclosure groups (Event /
+   TimelineItem drawers) — a plain native <details>/<summary>, styled to
+   match .drawer-section-title so a closed group looks identical to the
+   existing section headers, just with an affordance to expand it. */
+.drawer-disclosure{margin-top:18px;}
+.drawer-disclosure > summary{
+  cursor:pointer; list-style:none; display:flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint);
+}
+.drawer-disclosure > summary::-webkit-details-marker{display:none;}
+.drawer-disclosure > summary::before{content:"▸"; font-size:10px; transition:transform .15s var(--ease);}
+.drawer-disclosure[open] > summary::before{transform:rotate(90deg);}
+.drawer-disclosure-body{margin-top:10px;}
+.drawer-subsection-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); margin-bottom:7px;}
+
+.drawer-event-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:13.5px; color:var(--ink-dim); margin-top:6px;}
+.drawer-fact-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:9px;}
+.drawer-owner-line{font-size:13px; color:var(--ink-dim); margin-top:8px; font-weight:600;}
+
+/* Wedding Team-only CSS (the access-gate modal, its error/banner styling,
+   the date-simulator grid) is deliberately NOT included in this shared
+   stylesheet — this file is the Guest site's own copy, and none of that
+   markup is ever created by guest-app.js. */
+
+.toast{
+  position:fixed; bottom:calc(var(--nav-h) + 20px + var(--safe-bottom)); left:50%; transform:translateX(-50%) translateY(10px);
+  background:#2b2420; border:1px solid rgba(16,68,128,0.13); color:#f5efe6; padding:11px 18px; border-radius:14px;
+  font-size:13.5px; font-weight:600; z-index:300; opacity:0; pointer-events:none; transition:all .25s var(--ease);
+  box-shadow:0 10px 30px rgba(0,0,0,0.4); max-width:90vw;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+@media (min-width:860px){ .toast{bottom:24px;} }
+
+.empty-state{text-align:center; padding:40px 20px; color:var(--ink-faint);}
+.empty-state-icon{margin-bottom:12px; display:flex; align-items:center; justify-content:center;}
+.empty-state-icon svg{width:30px; height:30px;}
+.empty-state p{font-size:14px; line-height:1.5;}
+
+/* ==========================================================================
+   OUR WEDDING — guest experience.
+
+   A deliberately different visual world from the ops app: warm and light
+   where the operational tool is dark and dense, generous where the ops
+   grid is compact. No external fonts — a wide, high-quality system serif
+   stack carries the "luxury wedding website" feeling without a network
+   fetch, which matters for a page guests may open on venue wifi.
+   ========================================================================== */
+.side-guest-link{margin-top:auto;}
+.guest-app{
+  /* Guest keeps a soft celebratory feel, but now shares the bright blue
+     energy of the Wedding Team experience. Gold remains a small jewelry-like
+     accent instead of carrying the whole visual system. */
+  --g-bg:#f5faff;
+  --g-bg-2:#e9f3ff;
+  --g-ink:#10243f;
+  --g-ink-dim:#486681;
+  --g-ink-faint:#627d96;
+  --g-line:rgba(16,68,128,0.13);
+  --g-gold:#2876dd;
+  --g-gold-dim:#1758ae;
+  --g-coral:#3d8bff;
+  --g-coral-dim:#1f67c9;
+  --g-blush:#dcecff;
+  --g-rose:#81b7f5;
+  --g-card:#ffffff;
+  --g-header-bg:rgba(245,250,255,0.9);
+  --g-hero-glow:rgba(129,183,245,0.32);
+  --g-card-radius:16px;
+  --g-feature-radius:22px;
+  --g-button-radius:999px;
+  --g-card-shadow:0 16px 34px -28px rgba(16,68,128,.34);
+  --g-title-spacing:.01em;
+  --g-motif:none;
+  --g-serif:'Didot','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  width:100%; min-height:100vh; display:flex; flex-direction:column;
+  color:var(--g-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  /* Tasteful, textile-inspired background treatment: a faint botanical
+     sprig motif tiled at low opacity (baked into the SVG's own
+     stroke-opacity, not a page-wide element opacity, so content in front
+     of it stays fully legible) over the warm-cream base. Lightweight
+     inline SVG — no image request, safe on venue wifi. */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg fill='none' stroke='%232876dd' stroke-width='1' stroke-opacity='0.32' stroke-linecap='round'%3E%3Cpath d='M28 140 C28 105 28 75 28 30'/%3E%3Cpath d='M28 108 C38 100 46 92 52 82'/%3E%3Cpath d='M28 108 C18 100 10 92 4 82'/%3E%3Cpath d='M28 72 C38 64 46 56 52 46'/%3E%3Cpath d='M28 72 C18 64 10 56 4 46'/%3E%3Cpath d='M28 38 C34 32 39 26 42 20'/%3E%3Cpath d='M28 38 C22 32 17 26 14 20'/%3E%3Ccircle cx='120' cy='115' r='1.6'/%3E%3Ccircle cx='128' cy='108' r='1.6'/%3E%3Ccircle cx='114' cy='106' r='1.6'/%3E%3C/g%3E%3C/svg%3E") repeat,
+    var(--g-bg);
+  transition:background-color .35s var(--ease), color .35s var(--ease);
+}
+/* Event atmospheres preserve familiar navigation while changing color,
+   pattern, geometry and surface treatment for every celebration. */
+.guest-app.guest-theme-mehndi{
+  --g-bg:#fff7fb; --g-bg-2:#f7e6ef; --g-ink:#382337; --g-ink-dim:#6f5369; --g-ink-faint:#886d81;
+  --g-line:rgba(86,39,76,.14); --g-gold:#a83f78; --g-gold-dim:#7e2d59; --g-coral:#db6b95; --g-coral-dim:#a83f78;
+  --g-blush:#f7dce8; --g-rose:#df8fb1; --g-header-bg:rgba(255,247,251,.91); --g-hero-glow:rgba(223,143,177,.28);
+  background:radial-gradient(760px 420px at 10% 0%,rgba(221,104,151,.15),transparent 65%),radial-gradient(660px 420px at 100% 25%,rgba(109,151,91,.10),transparent 64%),var(--g-bg);
+}
+.guest-app.guest-theme-vidhi{
+  --g-bg:#fffaf0; --g-bg-2:#fff0cf; --g-ink:#3b2a18; --g-ink-dim:#725a3d; --g-ink-faint:#8c7356;
+  --g-line:rgba(117,77,22,.15); --g-gold:#d47a12; --g-gold-dim:#9c5609; --g-coral:#e59a2e; --g-coral-dim:#a65b0b;
+  --g-blush:#ffedc5; --g-rose:#eab75e; --g-header-bg:rgba(255,250,240,.92); --g-hero-glow:rgba(234,183,94,.30);
+  background:radial-gradient(760px 420px at 12% 0%,rgba(242,170,54,.18),transparent 64%),radial-gradient(680px 420px at 100% 22%,rgba(221,112,44,.09),transparent 62%),var(--g-bg);
+}
+.guest-app.guest-theme-sangeet{
+  --g-bg:#f8f5ff; --g-bg-2:#eee7ff; --g-ink:#251d42; --g-ink-dim:#5d537d; --g-ink-faint:#756b93;
+  --g-line:rgba(70,52,126,.15); --g-gold:#7b55c7; --g-gold-dim:#58369b; --g-coral:#a164d6; --g-coral-dim:#7241b1;
+  --g-blush:#e9ddfa; --g-rose:#b99ee4; --g-header-bg:rgba(248,245,255,.92); --g-hero-glow:rgba(153,117,214,.28);
+  background:radial-gradient(760px 430px at 12% 0%,rgba(126,82,199,.17),transparent 64%),radial-gradient(640px 420px at 100% 28%,rgba(224,92,155,.10),transparent 62%),var(--g-bg);
+}
+.guest-app.guest-theme-wedding{
+  --g-bg:#fff9f3; --g-bg-2:#f9eadb; --g-ink:#3b211b; --g-ink-dim:#73564d; --g-ink-faint:#8b7067;
+  --g-line:rgba(111,52,36,.15); --g-gold:#b7791f; --g-gold-dim:#8d5912; --g-coral:#b64b37; --g-coral-dim:#8f3526;
+  --g-blush:#f6dfd3; --g-rose:#d99a79; --g-header-bg:rgba(255,249,243,.92); --g-hero-glow:rgba(213,154,91,.28);
+  background:radial-gradient(780px 430px at 12% 0%,rgba(196,70,47,.12),transparent 64%),radial-gradient(680px 430px at 100% 25%,rgba(210,163,77,.15),transparent 62%),var(--g-bg);
+}
+.guest-app.guest-theme-reception{
+  --g-bg:#f4f7fb; --g-bg-2:#e6edf7; --g-ink:#14243c; --g-ink-dim:#4b607a; --g-ink-faint:#687c94;
+  --g-line:rgba(24,51,86,.15); --g-gold:#9a762e; --g-gold-dim:#72551b; --g-coral:#345f98; --g-coral-dim:#244d82;
+  --g-blush:#e1e8f2; --g-rose:#9eb1ca; --g-header-bg:rgba(244,247,251,.92); --g-hero-glow:rgba(78,106,145,.24);
+  background:radial-gradient(780px 430px at 12% 0%,rgba(29,58,98,.16),transparent 64%),radial-gradient(680px 430px at 100% 28%,rgba(179,142,66,.12),transparent 62%),var(--g-bg);
+}
+.guest-app.guest-theme-farewell{
+  --g-bg:#f6faf6; --g-bg-2:#e8f1e8; --g-ink:#203329; --g-ink-dim:#536b5c; --g-ink-faint:#6e8274;
+  --g-line:rgba(48,88,61,.14); --g-gold:#5e8768; --g-gold-dim:#41664b; --g-coral:#7b9d83; --g-coral-dim:#52745b;
+  --g-blush:#e1ece2; --g-rose:#a8c4ad; --g-header-bg:rgba(246,250,246,.92); --g-hero-glow:rgba(139,177,146,.27);
+  background:radial-gradient(760px 420px at 12% 0%,rgba(107,151,116,.15),transparent 64%),radial-gradient(660px 420px at 100% 25%,rgba(120,166,185,.09),transparent 62%),var(--g-bg);
+}
+/* COUNTDOWN THEME (2026-08-30): pre-first-event Home's own neutral
+   identity — champagne/ivory surfaces, warm gold accent, dark espresso
+   text — deliberately distinct from every event theme above (especially
+   Mehndi's green, which this exists to stop Home from inheriting before
+   Mehndi actually begins). Selected via guestThemeClass(); every existing
+   .guest-theme-* rule above is unchanged. Subtle, understated background
+   wash only — no motif/ornament flourish, since this is a quiet holding
+   state, not a celebration yet.
+   --g-gold/--g-gold-dim/--g-ink-faint are the darker, readability-checked
+   values (>=4.5:1 against --g-bg) — --g-coral/--g-coral-dim stay the
+   lighter decorative-only accent (not used as a white-text fill while
+   this theme is active). This compound selector already has enough
+   specificity over the base .guest-app{} defaults — no specificity fix
+   needed here, unlike the ops-side #app ID-selector issue. */
+.guest-app.guest-theme-countdown{
+  --g-bg:#f5f6f8; --g-bg-2:#e4e9f0; --g-ink:#20334b; --g-ink-dim:#465b73; --g-ink-faint:#596b80;
+  --g-line:rgba(43,65,94,.18); --g-gold:#405b7d; --g-gold-dim:#344d6c; --g-coral:#8298b6; --g-coral-dim:#344d6c;
+  --g-blush:#e8edf4; --g-rose:#b4c3d7; --g-card:#fff; --g-header-bg:rgba(245,246,248,.96); --g-hero-glow:transparent;
+  --g-motif:none;
+  background:radial-gradient(ellipse at 90% 0%,#dbe4f0,transparent 60%),linear-gradient(120deg,#fcfcfd,#eef1f6);
+}
+
+/* Mehndi: botanical, soft and organic. */
+.guest-app.guest-theme-mehndi{
+  --g-bg:#f3faef; --g-bg-2:#e1f0d9; --g-ink:#173724; --g-ink-dim:#456550; --g-ink-faint:#66806d;
+  --g-line:rgba(42,91,52,.17); --g-gold:#4f8a46; --g-gold-dim:#2f6d39; --g-coral:#79a84f; --g-coral-dim:#3d763c;
+  --g-blush:#dcecd4; --g-rose:#9cc27f; --g-card:#fbfef9; --g-header-bg:rgba(243,250,239,.92); --g-hero-glow:rgba(105,157,78,.25);
+  --g-card-radius:28px; --g-feature-radius:34px; --g-card-shadow:0 22px 42px -32px rgba(126,45,88,.42);
+  --g-motif:radial-gradient(circle at 50% 78%,transparent 42%,rgba(168,63,120,.24) 43% 44%,transparent 45%),radial-gradient(circle at 35% 68%,var(--g-rose) 0 3px,transparent 4px),radial-gradient(circle at 65% 68%,var(--g-rose) 0 3px,transparent 4px);
+  background-image:radial-gradient(760px 420px at 10% 0%,rgba(221,104,151,.15),transparent 65%),radial-gradient(660px 420px at 100% 25%,rgba(109,151,91,.10),transparent 64%),repeating-radial-gradient(ellipse at 0 100%,transparent 0 30px,rgba(100,139,81,.065) 31px 32px,transparent 33px 54px);
+}
+/* Vidhi: marigold dots, crisp corners and ceremonial arches. */
+.guest-app.guest-theme-vidhi{
+  --g-card-radius:12px; --g-feature-radius:18px; --g-button-radius:12px; --g-title-spacing:.025em; --g-card-shadow:0 18px 34px -28px rgba(164,91,11,.45);
+  --g-motif:repeating-radial-gradient(ellipse at 50% 100%,transparent 0 18px,rgba(212,122,18,.3) 19px 20px,transparent 21px 31px);
+  background-image:radial-gradient(760px 420px at 12% 0%,rgba(242,170,54,.18),transparent 64%),radial-gradient(680px 420px at 100% 22%,rgba(221,112,44,.09),transparent 62%),radial-gradient(circle,rgba(212,122,18,.14) 0 2px,transparent 2.5px); background-size:auto,auto,32px 32px;
+}
+/* Sangeet: faceted light, jewel colors and a stage-like sparkle. */
+.guest-app.guest-theme-sangeet{
+  --g-card-radius:20px; --g-feature-radius:26px; --g-card-shadow:0 24px 48px -28px rgba(75,42,137,.5);
+  --g-motif:radial-gradient(circle at 18% 30%,var(--g-rose) 0 2px,transparent 3px),radial-gradient(circle at 82% 38%,var(--g-gold) 0 2px,transparent 3px),radial-gradient(circle at 50% 10%,var(--g-coral) 0 3px,transparent 4px),conic-gradient(from 45deg at 50% 100%,transparent,rgba(123,85,199,.2),transparent 20%,rgba(219,107,149,.16),transparent 42%);
+  background-image:radial-gradient(760px 430px at 12% 0%,rgba(126,82,199,.2),transparent 64%),radial-gradient(640px 420px at 100% 28%,rgba(224,92,155,.13),transparent 62%),linear-gradient(135deg,transparent 47%,rgba(123,85,199,.055) 48% 52%,transparent 53%); background-size:auto,auto,46px 46px;
+}
+/* Wedding: formal mandap lines, ivory, vermillion and gold. */
+.guest-app.guest-theme-wedding{
+  --g-bg:#fffdfb; --g-bg-2:#f8ece9; --g-ink:#451512; --g-ink-dim:#76504c; --g-ink-faint:#916f6b;
+  --g-line:rgba(157,28,28,.18); --g-gold:#b88a35; --g-gold-dim:#8e641f; --g-coral:#c82f2f; --g-coral-dim:#9f1f24;
+  --g-blush:#f8dedd; --g-rose:#df7673; --g-card:#ffffff; --g-header-bg:rgba(255,253,251,.94); --g-hero-glow:rgba(196,43,43,.18);
+  --g-card-radius:8px; --g-feature-radius:14px; --g-button-radius:4px; --g-title-spacing:.04em; --g-card-shadow:0 16px 32px -26px rgba(113,51,34,.42);
+  --g-motif:linear-gradient(90deg,transparent 5%,rgba(200,47,47,.55) 5% 7%,transparent 7% 93%,rgba(200,47,47,.55) 93% 95%,transparent 95%),radial-gradient(ellipse at 50% 100%,transparent 0 48%,rgba(200,47,47,.34) 49% 52%,transparent 53%),radial-gradient(circle at 50% 18%,#b88a35 0 4px,transparent 5px);
+  background-image:radial-gradient(780px 430px at 12% 0%,rgba(200,47,47,.12),transparent 64%),radial-gradient(680px 430px at 100% 25%,rgba(255,255,255,.92),transparent 62%),linear-gradient(45deg,transparent 47%,rgba(200,47,47,.055) 48% 52%,transparent 53%); background-size:auto,auto,58px 58px;
+}
+/* Reception: dramatic midnight ballroom with champagne geometry. */
+.guest-app.guest-theme-reception{
+  --g-bg:#101d33; --g-bg-2:#172844; --g-ink:#f4f7fc; --g-ink-dim:#c5d0df; --g-ink-faint:#96a8bf;
+  --g-line:rgba(210,191,144,.22); --g-gold:#d2bf90; --g-gold-dim:#e0cca0; --g-coral:#8caed9; --g-coral-dim:#bad0ec;
+  --g-blush:#253959; --g-rose:#8da4c3; --g-card:#182a46; --g-header-bg:rgba(16,29,51,.9); --g-hero-glow:rgba(210,191,144,.2);
+  --g-card-radius:2px; --g-feature-radius:4px; --g-button-radius:2px; --g-title-spacing:.08em; --g-card-shadow:0 24px 52px -24px rgba(0,0,0,.65);
+  --g-motif:linear-gradient(135deg,transparent 46%,rgba(210,191,144,.22) 47% 48%,transparent 49% 51%,rgba(210,191,144,.14) 52% 53%,transparent 54%),radial-gradient(circle at 50% 50%,rgba(210,191,144,.45) 0 2px,transparent 3px);
+  background-image:radial-gradient(780px 430px at 12% 0%,rgba(98,126,166,.2),transparent 64%),radial-gradient(680px 430px at 100% 28%,rgba(210,191,144,.11),transparent 62%),radial-gradient(circle,rgba(255,255,255,.24) 0 1px,transparent 1.5px); background-size:auto,auto,58px 58px;
+}
+/* Farewell: airy sage layers with an asymmetrical, relaxed finish. */
+.guest-app.guest-theme-farewell{
+  --g-card-radius:18px 4px 18px 4px; --g-feature-radius:26px 6px 26px 6px; --g-card-shadow:0 18px 38px -30px rgba(54,91,65,.4);
+  --g-motif:linear-gradient(165deg,transparent 0 52%,rgba(94,135,104,.16) 53% 55%,transparent 56%),linear-gradient(15deg,transparent 0 57%,rgba(120,166,185,.13) 58% 60%,transparent 61%);
+  background-image:radial-gradient(760px 420px at 12% 0%,rgba(107,151,116,.15),transparent 64%),radial-gradient(660px 420px at 100% 25%,rgba(120,166,185,.09),transparent 62%),repeating-linear-gradient(0deg,transparent 0 35px,rgba(94,135,104,.045) 36px);
+}
+.guest-header{
+  position:sticky; top:0; z-index:20; background:var(--g-header-bg);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--g-line);
+}
+.guest-header-inner{
+  max-width:720px; margin:0 auto; padding:16px 20px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.guest-wordmark{
+  font-family:var(--g-serif); font-size:19px; letter-spacing:.04em; color:var(--g-ink);
+  background:none; border:none; cursor:pointer; padding:0;
+}
+.guest-nav{display:flex; gap:22px;}
+.guest-nav-link{
+  background:none; border:none; cursor:pointer; font-size:13.5px; font-weight:600;
+  color:var(--g-ink-dim); padding:6px 2px; position:relative; letter-spacing:.02em;
+}
+.guest-nav-link.active{color:var(--g-ink);}
+.guest-nav-link.active::after{
+  content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:var(--g-gold);
+}
+.guest-view{display:none;}
+.guest-view.active{display:block;}
+
+.guest-preview-banner{max-width:640px; margin:0 auto; padding:14px 24px 0; text-align:center;}
+.guest-preview-banner-inner{
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:11.5px; font-weight:700; letter-spacing:.03em;
+  color:var(--g-coral-dim); background:rgba(61,139,255,0.10);
+  border:1px solid rgba(61,139,255,0.27); border-radius:999px;
+  padding:6px 13px;
+}
+.guest-preview-banner-dot{width:6px; height:6px; border-radius:50%; background:var(--g-coral); flex-shrink:0;}
+.guest-hero{
+  max-width:640px; margin:0 auto; padding:76px 24px 32px; text-align:center; position:relative;
+  background:radial-gradient(520px 320px at 50% 0%, var(--g-hero-glow), transparent 70%);
+}
+.guest-hero::before{
+  content:""; position:absolute; top:8px; left:50%; transform:translateX(-50%); width:180px; height:90px;
+  background-image:var(--g-motif); background-repeat:no-repeat; background-size:contain; opacity:.9; pointer-events:none;
+}
+.guest-hero-eyebrow{
+  font-size:11.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--g-gold-dim); margin-bottom:18px; display:inline-flex; align-items:center; gap:8px;
+}
+.guest-hero-eyebrow.is-live{color:var(--g-coral-dim);}
+.guest-hero-eyebrow.is-live::before{
+  content:""; width:6px; height:6px; border-radius:50%; background:var(--g-coral-dim);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--g-coral) 20%,transparent); animation:livePulse 1.8s ease-in-out infinite;
+}
+.guest-hero-eyebrow.is-archive{color:var(--g-ink-faint);}
+.guest-hero-title{
+  font-family:var(--g-serif); font-weight:400; font-size:44px; line-height:1.1;
+  letter-spacing:var(--g-title-spacing); margin:0 0 14px;
+}
+@media (min-width:640px){ .guest-hero-title{font-size:56px;} }
+.guest-hero-date{font-size:15px; color:var(--g-ink-dim); font-weight:500;}
+.guest-hero-sub{font-size:15.5px; color:var(--g-ink-dim); line-height:1.6; max-width:460px; margin:10px auto 0;}
+.guest-countdown{
+  font-family:var(--g-serif); font-size:22px; color:var(--g-gold-dim); margin-top:16px; letter-spacing:.02em;
+}
+.guest-hero-next{font-size:14px; color:var(--g-ink-dim); margin-top:10px;}
+
+/* VIDHI TWO-SIDE EXPERIENCE: the Home hero's dual-track module lives just
+   below (.guest-hero.is-vidhi / .guest-vidhi-module and friends). The
+   Schedule-detail page's OWN two-sides rendering used to be a near-
+   duplicate "status card" family (.guest-vidhi-grid/.guest-vidhi-card,
+   .guest-vidhi-summary-card) sitting above a still fully flat, still
+   interleaved moments list underneath it. The GUEST EVENT-DETAIL
+   HIERARCHY REFINEMENT pass below (see .guest-vidhi-detail-tracks and
+   friends, further down this file) replaces that entirely — those old
+   classes are gone; nothing else referenced them. */
+.guest-hero.is-vidhi .guest-hero-title{font-size:32px;}
+@media (min-width:640px){ .guest-hero.is-vidhi .guest-hero-title{font-size:40px;} }
+
+/* GUEST HOME HIERARCHY REFINEMENT (2026-08-30): the integrated Vidhi home
+   module (see vidhiDualGuestHeroHtml/vidhiGuestModuleColumnHtml in
+   guest-app.js). One bordered card replaces the old "two loud cards + a
+   floating convergence sentence" layout — a vertical divider splits the
+   two sides into balanced columns on desktop (>=480px), and the divider
+   rotates to a horizontal rule between clean stacked rows on mobile. The
+   Lunch/merge convergence lives inside the same card as a subdued footer
+   strip rather than a separate sentence below it. This is the Home-hero
+   module specifically; the Schedule-detail page's own two-sides layout
+   is visually related but a distinct class family (.guest-vidhi-detail-*
+   below) since it lays out full internally-chronological tracks rather
+   than a single current/next status per side. */
+.guest-vidhi-module{
+  margin-top:18px; text-align:left; background:var(--g-card); border:1px solid var(--g-line);
+  border-radius:var(--g-card-radius); box-shadow:var(--g-card-shadow); overflow:hidden; box-sizing:border-box;
+}
+.guest-vidhi-module-label{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--g-gold-dim); padding:16px 18px 0;
+}
+.guest-vidhi-columns{display:grid; grid-template-columns:1fr; margin-top:12px;}
+@media (min-width:480px){ .guest-vidhi-columns{grid-template-columns:1fr 1fr;} }
+.guest-vidhi-column{padding:14px 18px; border-top:1px solid var(--g-line); box-sizing:border-box;}
+.guest-vidhi-columns .guest-vidhi-column:first-child{border-top:none;}
+@media (min-width:480px){
+  .guest-vidhi-column{border-top:none; border-left:1px solid var(--g-line);}
+  .guest-vidhi-columns .guest-vidhi-column:first-child{border-left:none;}
+}
+.guest-vidhi-column-label{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--g-gold-dim);}
+.guest-vidhi-now{font-size:15px; font-weight:650; line-height:1.35; color:var(--g-ink); margin-top:6px;}
+.guest-vidhi-now-pending{color:var(--g-ink-faint); font-weight:500;}
+.guest-vidhi-next{font-size:12.5px; color:var(--g-ink-dim); margin-top:6px;}
+.guest-vidhi-tag{
+  display:inline-block; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.07em;
+  padding:2px 7px; border-radius:999px; margin-right:6px; position:relative; top:-1px;
+  color:var(--g-coral-dim); background:color-mix(in srgb, var(--g-coral) 16%, transparent);
+}
+.guest-vidhi-tag.is-next{color:var(--g-ink-faint); background:var(--g-line);}
+.guest-vidhi-merge{
+  font-size:12.5px; color:var(--g-ink-dim); text-align:center;
+  padding:12px 16px; border-top:1px solid var(--g-line); background:var(--g-bg);
+}
+.guest-btn{
+  display:inline-flex; align-items:center; gap:8px; margin-top:28px;
+  padding:13px 26px; border-radius:var(--g-button-radius); background:var(--g-ink); color:var(--g-bg);
+  border:1px solid var(--g-ink); font-size:13.5px; font-weight:650; letter-spacing:.03em;
+  cursor:pointer; text-decoration:none; transition:transform .2s var(--ease), opacity .2s var(--ease);
+}
+.guest-btn:hover{opacity:.86; transform:translateY(-1px);}
+.guest-btn svg{width:15px; height:15px;}
+.guest-btn-outline{
+  background:none; color:var(--g-ink); border:1px solid var(--g-line); margin-top:18px;
+}
+
+.guest-section{max-width:640px; margin:0 auto; padding:40px 24px;}
+.guest-section + .guest-section{border-top:1px solid var(--g-line);}
+.guest-section-top{padding-top:56px;}
+.guest-section-center{text-align:center;}
+.guest-eyebrow{
+  font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--g-gold-dim); margin-bottom:8px;
+}
+.guest-heading{font-family:var(--g-serif); font-weight:400; font-size:32px; margin:0 0 24px;}
+.guest-heading-sm{font-family:var(--g-serif); font-weight:400; font-size:23px; margin:0 0 20px;}
+.guest-body{font-size:14.5px; color:var(--g-ink-dim); line-height:1.6;}
+.guest-body-sm{font-size:12.5px; color:var(--g-ink-faint); margin-top:10px;}
+.guest-empty{color:var(--g-ink-faint); font-size:14px; text-align:center; padding:20px 0;}
+
+.guest-details-grid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--g-line); border:1px solid var(--g-line); border-radius:var(--g-card-radius); overflow:hidden; box-shadow:var(--g-card-shadow);}
+.guest-details-grid:has(.guest-detail:only-child){grid-template-columns:1fr;}
+.guest-detail{background:var(--g-card); padding:20px 18px;}
+.guest-detail-icon{color:var(--g-gold); margin-bottom:10px;}
+.guest-detail-icon svg{width:19px; height:19px;}
+.guest-detail-label{font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--g-ink-faint); margin-bottom:5px;}
+.guest-detail-value{font-size:14px; font-weight:600; line-height:1.4; color:var(--g-ink);}
+.guest-detail-sub{font-size:12px; color:var(--g-ink-dim); margin-top:4px; line-height:1.4;}
+
+/* Live event camera: the strongest Guest CTA only while the matching event
+   is in progress and has a configured https link. It sits immediately
+   below the hero, before the ordinary Schedule/hashtag pair. */
+.guest-live-photo-wrap{max-width:640px; margin:0 auto; padding:0 24px 18px;}
+/* GUEST HOME HIERARCHY REFINEMENT (2026-08-30): dialed back from a
+   near-hero-sized feature (24px padding, 48px icon, 22px serif headline,
+   14px-tall button) to a visibly smaller, quieter secondary action — it
+   still needs to read as tappable and "live", just not compete with the
+   current-moment hero above it. Applies to every guest home state (the
+   working Lense card here AND its .is-disabled Mehndi counterpart below
+   share this same base rule), and only to the guest site. */
+.guest-live-photo-card{
+  position:relative; overflow:hidden; text-align:center; padding:16px 20px;
+  border-radius:var(--g-feature-radius); border:1px solid color-mix(in srgb,var(--g-coral) 42%,transparent);
+  background:linear-gradient(145deg,color-mix(in srgb,var(--g-coral) 15%,transparent),color-mix(in srgb,var(--g-rose) 12%,transparent) 55%,var(--g-card));
+  box-shadow:0 12px 22px -20px rgba(16,68,128,.5);
+}
+.guest-live-photo-eyebrow{display:flex; justify-content:center; align-items:center; gap:7px; color:var(--g-coral-dim); font-size:10.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase;}
+.guest-live-photo-eyebrow span{width:7px; height:7px; border-radius:50%; background:var(--g-coral-dim); box-shadow:0 0 0 5px color-mix(in srgb,var(--g-coral) 18%,transparent);}
+.guest-live-photo-icon{width:36px; height:36px; margin:10px auto 7px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--g-coral-dim); background:color-mix(in srgb,var(--g-coral) 15%,transparent);}
+.guest-live-photo-icon svg{width:17px; height:17px;}
+.guest-live-photo-card h2{font-family:var(--g-serif); font-size:17px; color:var(--g-ink);}
+.guest-live-photo-card p{max-width:390px; margin:5px auto 13px; color:var(--g-ink-dim); font-size:13px; line-height:1.5;}
+.guest-live-photo-button{display:flex; justify-content:center; align-items:center; gap:8px; width:100%; box-sizing:border-box; padding:11px 18px; border-radius:12px; background:var(--g-coral-dim); color:#fff; font-size:14px; font-weight:800; text-decoration:none; box-shadow:0 8px 16px -12px rgba(16,68,128,.7);}
+.guest-live-photo-button:hover{filter:brightness(.9);}
+.guest-live-photo-button svg{width:16px; height:16px;}
+.guest-live-photo-qr{margin-top:13px; color:var(--g-ink-dim); font-size:12.5px;}
+.guest-live-photo-qr summary{cursor:pointer; font-weight:650;}
+.guest-live-photo-qr img{display:block; width:min(220px,80%); height:auto; margin:12px auto 0; border-radius:14px; background:#fff; padding:10px; box-sizing:border-box;}
+.guest-live-photo-hashtag{margin-top:15px; color:var(--g-ink-faint); font-size:12.5px;}
+.guest-live-photo-hashtag span{display:block;}
+.guest-live-photo-hashtag strong{display:block; margin-top:3px; color:var(--g-coral-dim); font-size:19px; line-height:1.2; letter-spacing:.025em;}
+.guest-live-seating-wrap{max-width:640px;margin:0 auto;padding:0 24px 18px;}
+.guest-live-seating-card{text-align:center;padding:22px;border-radius:var(--g-feature-radius);color:#fff;background:linear-gradient(145deg,#173c39,#245a54);box-shadow:0 16px 34px -20px rgba(19,58,54,.62);}
+.guest-live-seating-eyebrow{display:flex;justify-content:center;align-items:center;gap:7px;color:#d9c8a8;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;}
+.guest-live-seating-eyebrow span{width:7px;height:7px;border-radius:50%;background:#d8bd82;box-shadow:0 0 0 5px rgba(216,189,130,.15);}
+.guest-live-seating-card h2{font-family:var(--g-serif);font-size:24px;font-weight:400;margin:10px 0 7px;color:#fff;}
+.guest-live-seating-card p{max-width:410px;margin:0 auto 16px;color:#e7dfcf;font-size:13px;line-height:1.55;}
+.guest-live-seating-button{display:flex;align-items:center;justify-content:center;gap:8px;max-width:420px;min-height:48px;margin:0 auto;border-radius:12px;background:#fff;color:#173c39;text-decoration:none;font-size:14px;font-weight:800;}
+.guest-live-seating-button svg{width:16px;height:16px;}
+
+/* MEHNDI_HAS NO LENSE LINK YET: subdued, non-interactive counterpart to
+   .guest-live-photo-card — neutral dashed border, muted icon/eyebrow, and
+   a real disabled <button> (not a link) so it can never be tapped or
+   open Lense. */
+.guest-live-photo-card.is-disabled{border:1px dashed var(--g-line); background:var(--g-card); box-shadow:none;}
+.guest-live-photo-card.is-disabled .guest-live-photo-eyebrow{color:var(--g-ink-faint);}
+.guest-live-photo-card.is-disabled .guest-live-photo-eyebrow span{background:var(--g-ink-faint); box-shadow:0 0 0 5px color-mix(in srgb,var(--g-ink-faint) 18%,transparent);}
+.guest-live-photo-card.is-disabled .guest-live-photo-icon{color:var(--g-ink-faint); background:color-mix(in srgb,var(--g-ink-faint) 14%,transparent);}
+.guest-live-photo-card.is-disabled .guest-live-photo-button{background:var(--g-line); color:var(--g-ink-faint); box-shadow:none; cursor:not-allowed; border:none;}
+.guest-live-photo-card.is-disabled .guest-live-photo-button:hover{filter:none;}
+
+/* Paired actions band (requirement 9): "View Your Schedule" and "Share
+   Your Photos" as matched-weight cards immediately below the hero, so
+   they read as one paired call-to-action rather than a lone hero button
+   followed by a much heavier standalone photo section further down. */
+.guest-actions-pair{
+  max-width:640px; margin:0 auto; padding:0 24px 40px;
+  display:grid; grid-template-columns:1fr; gap:12px;
+}
+@media (min-width:480px){
+  .guest-actions-pair{grid-template-columns:1fr 1fr;}
+}
+.guest-action-card{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  width:100%; box-sizing:border-box; appearance:none; font:inherit; cursor:pointer;
+  padding:24px 18px;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--g-coral) 13%,transparent),color-mix(in srgb,var(--g-rose) 8%,transparent) 60%,var(--g-card));
+  border:1px solid color-mix(in srgb,var(--g-coral) 26%,transparent); border-radius:var(--g-feature-radius);
+  position:relative; overflow:hidden;
+  box-shadow:var(--g-card-shadow);
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease);
+}
+.guest-action-card:hover{transform:translateY(-2px); box-shadow:0 18px 32px -22px rgba(16,68,128,0.38);}
+.guest-action-card.is-photo{
+  background:linear-gradient(160deg,color-mix(in srgb,var(--g-coral) 18%,transparent),color-mix(in srgb,var(--g-rose) 9%,transparent) 60%,var(--g-card));
+  border-color:color-mix(in srgb,var(--g-coral) 30%,transparent);
+  box-shadow:var(--g-card-shadow);
+}
+.guest-action-card.is-photo:hover{box-shadow:0 18px 32px -22px rgba(16,68,128,0.38);}
+.guest-action-icon-badge{
+  width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:color-mix(in srgb,var(--g-gold) 14%,transparent); color:var(--g-gold-dim); margin-bottom:10px;
+}
+.guest-action-icon-badge svg{width:20px; height:20px;}
+.guest-action-card.is-photo .guest-action-icon-badge{background:color-mix(in srgb,var(--g-coral) 16%,transparent); color:var(--g-coral-dim);}
+.guest-action-title{font-size:14.5px; font-weight:700; color:var(--g-ink); letter-spacing:.01em;}
+.guest-action-sub{font-size:12px; color:var(--g-ink-faint); margin-top:3px;}
+.guest-action-sub [data-hashtag-text]{display:block; margin-top:3px; color:var(--g-coral-dim); font-size:16px; font-weight:800; letter-spacing:.02em;}
+
+.guest-transport-list{display:flex; flex-direction:column; gap:1px; background:var(--g-line); border:1px solid var(--g-line); border-radius:var(--g-card-radius); overflow:hidden; box-shadow:var(--g-card-shadow);}
+.guest-transport-card{background:var(--g-card); padding:18px 20px;}
+.guest-transport-route{font-family:var(--g-serif); font-size:16.5px; color:var(--g-ink);}
+.guest-transport-time{font-size:12.5px; color:var(--g-ink-faint); margin-top:4px;}
+.guest-transport-note{font-size:13px; color:var(--g-ink-dim); line-height:1.55; margin-top:8px;}
+
+.guest-day{max-width:640px; margin:0 auto 44px;}
+.guest-day:last-child{margin-bottom:0;}
+.guest-day-label{
+  font-family:var(--g-serif); font-size:19px; color:var(--g-gold-dim); margin-bottom:18px;
+  padding-bottom:10px; border-bottom:1px solid var(--g-rose); border-bottom-color:rgba(129,183,245,0.35);
+}
+/* Guest Schedule event picker (requirement 10: progressive disclosure —
+   events grouped/ordered by date, each card a factual public summary
+   only; selecting one is the single decision that matters first). */
+.guest-events-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+@media (min-width:560px){ .guest-events-grid{grid-template-columns:1fr 1fr;} }
+.guest-event-pick-card{
+  display:block; width:100%; box-sizing:border-box; appearance:none; font:inherit; cursor:pointer;
+  text-align:left; padding:18px 20px;
+  background:var(--g-card); border:1px solid var(--g-line); border-radius:var(--g-card-radius); box-shadow:var(--g-card-shadow);
+  position:relative; transition:transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
+}
+.guest-event-pick-card:hover{transform:translateY(-2px); box-shadow:0 14px 26px -22px rgba(16,68,128,0.32); border-color:rgba(61,139,255,0.38);}
+.guest-event-pick-card.is-live{border-color:color-mix(in srgb,var(--g-coral-dim) 45%,transparent); background:linear-gradient(160deg,color-mix(in srgb,var(--g-coral) 10%,transparent),var(--g-card) 55%);}
+.guest-live-pill{
+  display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--g-coral-dim); margin-bottom:8px;
+}
+.guest-live-dot{
+  width:6px; height:6px; border-radius:50%; background:var(--g-coral-dim);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--g-coral) 18%,transparent); animation:livePulse 1.8s ease-in-out infinite;
+}
+.guest-event-pick-title{font-family:var(--g-serif); font-size:18px; color:var(--g-ink); margin-bottom:4px;}
+.guest-event-pick-sub{font-size:12.5px; color:var(--g-ink-dim);}
+.guest-event-pick-count{font-size:11.5px; color:var(--g-ink-faint); margin-top:8px;}
+
+.guest-schedule-back{
+  display:inline-flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer;
+  color:var(--g-ink-dim); font-size:12.5px; font-weight:600; letter-spacing:.02em; margin-bottom:16px; padding:0;
+}
+.guest-schedule-back svg{width:14px; height:14px; transform:rotate(180deg);}
+.guest-schedule-back:hover{color:var(--g-ink);}
+/* GUEST EVENT-DETAIL HIERARCHY REFINEMENT (2026-08-30): the detail page's
+   own compact header (Back + eyebrow + event name/date/time/location) —
+   less top padding than the plain .guest-section-top used by the
+   event-picker page, since Back/eyebrow/title now read as one tight
+   header unit rather than a full page-opening hero. */
+.guest-section.guest-schedule-detail-top{padding-top:40px;}
+
+/* RESPONSIVE PHOTO CTA redesign (2026-08-29): the previous single-line
+   inline-flex pill squeezed three competing items (icon, "Share Your
+   Photos — Tap to Copy" text, and the hashtag) into one row, which wrapped
+   awkwardly at 360–430px. Now a two-row card: a top row for the icon +
+   label, a second row for the "Tap to copy" instruction + a visually
+   prominent hashtag — never a card as loud as the schedule itself
+   (requirement 10 still holds; this is a light-bordered, not filled,
+   surface), but roomy enough to stay legible and comfortable to tap
+   (generous padding, min-height beyond the 44px tap-target minimum) at
+   any phone width. */
+.guest-schedule-photo-nudge-wrap{max-width:420px; margin:8px auto 0; padding:0 20px 40px;}
+.guest-schedule-photo-nudge{
+  display:flex; flex-direction:column; align-items:center; gap:6px; width:100%;
+  background:var(--g-card); appearance:none; font:inherit; cursor:pointer;
+  border:1px solid var(--g-line); border-radius:16px; padding:14px 18px;
+  text-align:center; min-height:44px;
+  transition:border-color .2s var(--ease), background .2s var(--ease);
+}
+.guest-schedule-photo-nudge-row{display:flex; align-items:center; gap:8px;}
+.guest-schedule-photo-nudge-icon{display:flex; color:var(--g-coral-dim);}
+.guest-schedule-photo-nudge-icon svg{width:15px; height:15px;}
+.guest-schedule-photo-nudge-label{font-size:14px; font-weight:700; color:var(--g-ink); letter-spacing:.01em;}
+.guest-schedule-photo-nudge-tag-row{display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:6px;}
+.guest-schedule-photo-nudge-tap{font-size:11.5px; font-weight:600; color:var(--g-ink-faint);}
+.guest-schedule-photo-nudge-hashtag{font-size:16px; font-weight:800; letter-spacing:.02em; color:var(--g-coral-dim); overflow-wrap:anywhere;}
+.guest-schedule-photo-nudge:hover{border-color:rgba(61,139,255,0.38); background:rgba(61,139,255,0.08);}
+
+.guest-event{margin-bottom:26px;}
+.guest-event:last-child{margin-bottom:0;}
+.guest-event-head{margin-bottom:10px;}
+.guest-event-title{font-family:var(--g-serif); font-size:19px; color:var(--g-ink);}
+.guest-event-date{font-size:13px; color:var(--g-gold-dim); font-weight:600; margin-top:3px;}
+.guest-event-meta{font-size:12.5px; color:var(--g-ink-faint); margin-top:2px;}
+/* Bounded schedule panel (GUEST EVENT-DETAIL HIERARCHY REFINEMENT,
+   2026-08-30): wraps .guest-moments in one card so the schedule reads as
+   the page's clear primary content — not a bare list floating on the
+   page background — matching the restraint of the Home hero's own
+   .guest-vidhi-module panel. */
+.guest-schedule-panel{
+  background:var(--g-card); border:1px solid var(--g-line); border-radius:var(--g-card-radius);
+  box-shadow:var(--g-card-shadow); padding:4px 18px; box-sizing:border-box;
+}
+.guest-schedule-panel + .guest-schedule-panel{margin-top:14px;}
+.guest-moments{display:flex; flex-direction:column;}
+/* RESPONSIVE SCHEDULE ROW ALIGNMENT fix (2026-08-29): a CSS grid (not a
+   wrapping flex row) so the time column is a fixed width shared by every
+   row — single times ("6:00 PM") and normalized ranges
+   ("12:00 PM – 2:00 PM", now guest-app.js's normalizeTimeLabel() output)
+   alike — and the title always starts at the same x position in its own
+   column. 136px comfortably fits the longest range text on one line
+   (white-space:nowrap below), so the time never wraps character-by-
+   character and never pushes the title onto its own row; the title
+   column wraps normally (word-wrap, not mid-word) when it needs more
+   than one line, which is expected and fine at phone widths. */
+.guest-moment{
+  display:grid; grid-template-columns:136px 1fr; column-gap:14px; row-gap:4px;
+  align-items:baseline; padding:9px 0;
+  border-top:1px solid var(--g-line);
+}
+.guest-moment:first-child{border-top:none;}
+.guest-moment-time{font-size:12.5px; color:var(--g-ink-faint); font-weight:600; white-space:nowrap;}
+.guest-moment-title{font-size:14.5px; color:var(--g-ink); min-width:0; overflow-wrap:break-word;}
+.guest-moment.is-current{position:relative; margin:0 -18px; padding:9px 18px; background:color-mix(in srgb,var(--g-coral) 7%,transparent);}
+.guest-moment.is-current::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--g-coral-dim);}
+.guest-moment.is-current .guest-moment-time{color:var(--g-coral-dim);}
+.guest-moment.is-current .guest-moment-title{font-weight:650;}
+/* GUEST EXPANDED PROGRAM correction (2026-08-27): the optional, purely
+   informational order-of-events disclosure on a moment whose Sheet row
+   carries a guestSubMoments sequence (see guest-app.js). Always drops to
+   its own full-width row below the time/title pair, never inline beside
+   them — in the title column (grid-column:2), preserving the original
+   title-aligned indent the old flex layout produced with margin-left:80px. */
+.guest-moment-detail{grid-column:2; margin-left:0;}
+.guest-moment-detail > summary{
+  font-size:12.5px; color:var(--g-gold-dim); font-weight:600; cursor:pointer; list-style:none;
+}
+.guest-moment-detail > summary::-webkit-details-marker{display:none;}
+.guest-moment-detail > summary::before{content:"+ "; }
+.guest-moment-detail[open] > summary::before{content:"– "; }
+.guest-moment-detail-list{
+  margin:8px 0 2px; padding-left:18px; font-size:13.5px; color:var(--g-ink-faint); line-height:1.6;
+}
+
+/* GUEST EVENT-DETAIL HIERARCHY REFINEMENT (2026-08-30): Vidhi's special
+   pre-merge structure on its OWN Schedule-detail page — a section label,
+   then either a plain .guest-schedule-panel (shared items / the
+   post-merge "Together" timeline, using the exact same
+   .guest-moments/.guest-moment markup every other event's detail page
+   uses) or the two-sides tracks panel below. Not a reuse of the Home
+   hero's .guest-vidhi-module/.guest-vidhi-columns (that module shows one
+   current+next status per side; this shows each side's FULL, internally
+   chronological pre-merge list), but the same visual language: a bounded
+   card, a vertical divider between balanced desktop columns, a
+   horizontal rule between stacked mobile rows. */
+.guest-vidhi-detail-label{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--g-gold-dim); margin:18px 0 8px;
+}
+.guest-schedule-panel.guest-vidhi-tracks-panel{padding:0;}
+.guest-vidhi-detail-tracks{display:grid; grid-template-columns:1fr;}
+@media (min-width:480px){ .guest-vidhi-detail-tracks{grid-template-columns:1fr 1fr;} }
+.guest-vidhi-track{padding:14px 18px; box-sizing:border-box;}
+@media (min-width:480px){
+  .guest-vidhi-track{border-left:1px solid var(--g-line);}
+  .guest-vidhi-detail-tracks .guest-vidhi-track:first-child{border-left:none;}
+}
+.guest-vidhi-track-label{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--g-gold-dim); margin-bottom:8px;}
+.guest-vidhi-track-row{
+  display:grid; grid-template-columns:76px 1fr; column-gap:10px;
+  align-items:baseline; padding:6px 0; border-top:1px solid var(--g-line);
+}
+.guest-vidhi-track-label + .guest-vidhi-track-row{border-top:none;}
+.guest-vidhi-track-time{font-size:11.5px; color:var(--g-ink-faint); font-weight:600; white-space:nowrap;}
+.guest-vidhi-track-title{font-size:13.5px; color:var(--g-ink); min-width:0; overflow-wrap:break-word;}
+.guest-vidhi-track-empty{font-size:12.5px; color:var(--g-ink-faint); padding:4px 0;}
+.guest-vidhi-track-row.is-current{position:relative; margin:0 -18px; padding:6px 18px; background:color-mix(in srgb,var(--g-coral) 7%,transparent);}
+.guest-vidhi-track{position:relative;}
+.guest-vidhi-track-row.is-current::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--g-coral-dim);}
+.guest-vidhi-track-row.is-current .guest-vidhi-track-time{color:var(--g-coral-dim);}
+.guest-vidhi-track-row.is-current .guest-vidhi-track-title{font-weight:650;}
+.guest-vidhi-bridge{
+  display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:8px;
+  padding:12px 18px; border-top:1px solid var(--g-line); background:var(--g-bg);
+  font-size:12.5px; color:var(--g-ink-dim); text-align:center;
+}
+.guest-vidhi-bridge-time{font-weight:700; color:var(--g-gold-dim);}
+
+.guest-footer{
+  margin-top:auto; text-align:center; padding:44px 20px 36px; border-top:1px solid var(--g-line);
+}
+.guest-footer-mark{font-family:var(--g-serif); font-size:16px; color:var(--g-ink);}
+.guest-footer-date{font-size:12px; color:var(--g-ink-faint); margin-top:4px;}
+.guest-team-link{
+  margin-top:10px; background:none; border:none; color:var(--g-ink-faint); font-size:11.5px;
+  letter-spacing:.05em; cursor:pointer; text-decoration:underline; text-underline-offset:3px;
+  padding:12px 8px; /* discreet in size/weight but still a full mobile-friendly tap target (req 7) */
+}
+
+/* GUEST DEMO CLOCK (2026-08-29): opt-in preview control (?demo=1 only —
+   see isPreviewMode() in guest-app.js), styled with the same restraint as
+   the rest of the guest footer so it reads as a developer/family tool,
+   never as a guest-facing feature. A native <details>/<summary> disclosure
+   (same pattern as .guest-moment-detail) so no extra JS is needed for
+   open/close. Every interactive element is sized to a >=44px tap target
+   and the panel is width-capped and box-sizing:border-box so it can never
+   cause horizontal overflow at 360-430px. */
+.guest-demo-clock{margin-top:18px; display:inline-block; max-width:100%; text-align:left;}
+.guest-demo-clock summary{
+  display:inline-flex; align-items:center; gap:7px; list-style:none; cursor:pointer;
+  min-height:44px; padding:10px 16px; border-radius:999px; border:1px solid var(--g-line);
+  background:var(--g-card); color:var(--g-ink-dim); font-size:12px; font-weight:700; letter-spacing:.02em;
+}
+.guest-demo-clock summary::-webkit-details-marker{display:none;}
+.guest-demo-badge-dot{width:6px; height:6px; border-radius:50%; background:var(--g-coral); flex-shrink:0;}
+.guest-demo-clock-panel{
+  margin:10px auto 0; padding:14px; max-width:280px; width:calc(100vw - 40px); box-sizing:border-box;
+  border:1px solid var(--g-line); border-radius:14px; background:var(--g-card);
+  display:flex; flex-direction:column; gap:8px;
+}
+.guest-demo-clock-panel label{
+  font-size:10.5px; font-weight:700; color:var(--g-ink-faint); text-transform:uppercase; letter-spacing:.05em;
+}
+.guest-demo-clock-panel select, .guest-demo-clock-panel input{
+  width:100%; box-sizing:border-box; min-height:44px; padding:8px 12px; border-radius:10px;
+  border:1px solid var(--g-line); background:var(--g-bg); color:var(--g-ink); font:inherit; font-size:14px;
+}
+.guest-demo-clock-actions{display:flex; gap:8px; margin-top:2px;}
+.guest-demo-btn{
+  flex:1; min-height:44px; min-width:0; border-radius:10px; border:1px solid var(--g-line);
+  background:var(--g-bg); color:var(--g-ink); font:inherit; font-weight:700; font-size:13px; cursor:pointer;
+}
+.guest-demo-btn:hover{border-color:var(--g-coral-dim); color:var(--g-coral-dim);}
+
+@media (min-width:700px){
+  .guest-details-grid{grid-template-columns:repeat(4,1fr);}
+  .guest-details-grid:has(.guest-detail:only-child){grid-template-columns:1fr;}
+}
+/* Guest home: a single editorial focal point, then one useful action,
+   then quiet supporting links. Shared by every event and preview state. */
+#guest-view-home .guest-hero{max-width:800px;padding:68px 32px 34px;}
+#guest-view-home .guest-hero-title{font-size:clamp(34px,4.4vw,58px);line-height:1.12;max-width:740px;margin:0 auto 16px;text-wrap:balance;}
+#guest-view-home .guest-hero-eyebrow{font-size:11px;letter-spacing:.19em;margin-bottom:18px;}
+#guest-view-home .guest-hero-date{font-size:15px;line-height:1.65;}
+#guest-view-home .guest-hero-next{display:block;width:fit-content;max-width:100%;box-sizing:border-box;margin:20px auto 0;padding:12px 20px;border-top:1px solid var(--g-line);font-size:14px;line-height:1.5;}
+#guest-view-home .guest-live-photo-wrap,#guest-view-home .guest-actions-pair{max-width:740px;}
+#guest-view-home .guest-live-photo-card{background:var(--g-card);border:1px solid var(--g-line);padding:22px 28px;box-shadow:0 12px 40px -28px var(--g-ink);}
+#guest-view-home .guest-live-photo-icon{display:none;}
+#guest-view-home .guest-live-photo-card h2{font-size:24px;margin:10px 0 8px;}
+#guest-view-home .guest-live-photo-card p{max-width:470px;font-size:14px;margin-bottom:18px;}
+#guest-view-home .guest-live-photo-button{max-width:440px;margin:0 auto;min-height:48px;font-weight:650;}
+#guest-view-home .guest-actions-pair{gap:0;padding-bottom:18px;}
+#guest-view-home .guest-action-card,#guest-view-home .guest-action-card.is-photo{border:0;background:none;box-shadow:none;border-radius:0;padding:18px 12px;}
+#guest-view-home .guest-action-icon-badge{display:none;}
+#guest-view-home .guest-action-title{font-size:14px;}
+#guest-view-home .guest-action-card.is-photo{border-left:1px solid var(--g-line);}
+#guest-view-home .guest-section{padding-top:22px;}
+#guest-view-home .guest-vidhi-module{box-shadow:none;border-radius:12px;}
+#guest-view-home .guest-vidhi-now{font-size:17px;line-height:1.5;}
+#guest-view-home .guest-vidhi-next{line-height:1.6;}
+#guest-view-home .guest-vidhi-module-label{font-size:10px;letter-spacing:.14em;}
+.guest-theme-countdown #guest-view-home .guest-hero{margin:32px auto 24px;border:1px solid var(--g-line);outline:1px solid var(--g-line);outline-offset:-9px;background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(228,233,240,.35));padding:62px 30px 48px;max-width:692px;}
+.guest-theme-countdown #guest-view-home .guest-hero::before{display:none;}
+.guest-theme-countdown .guest-countdown{font-family:inherit;font-size:13px;letter-spacing:.16em;text-transform:uppercase;margin-top:26px;}
+#guest-view-home .guest-live-photo-hashtag{display:none;}
+.guest-event-pick-sub{line-height:1.65;}
+.guest-event-pick-count{letter-spacing:.025em;}
+.guest-event-pick-card:focus-visible,.guest-action-card:focus-visible,.guest-live-photo-button:focus-visible{outline:3px solid var(--g-ink);outline-offset:4px;}
+@media(max-width:600px){
+  #guest-view-home .guest-hero{padding:52px 22px 26px;}
+  #guest-view-home .guest-hero-title{font-size:34px;}
+  #guest-view-home .guest-live-photo-card{padding:20px;}
+  #guest-view-home .guest-live-photo-card h2{font-size:22px;}
+  #guest-view-home .guest-actions-pair{grid-template-columns:1fr 1fr;}
+  #guest-view-home .guest-action-sub{font-size:12px;line-height:1.6;}
+  #guest-view-home .guest-action-sub [data-hashtag-text]{font-size:15px;overflow-wrap:anywhere;}
+  .guest-theme-countdown #guest-view-home .guest-hero{margin:24px 20px;max-width:none;padding:48px 24px 36px;}
+  #guest-view-home .guest-vidhi-column{padding:16px;}
+}
+@media(prefers-reduced-motion:reduce){.guest-live-dot,.guest-hero-eyebrow.is-live::before{animation:none;}.guest-action-card,.guest-event-pick-card{transition:none;}}
+/* Event directories reuse the existing guest palette and typography. */
+.guest-directory-search { display:block; box-sizing:border-box; width:100%; margin:10px 0 16px; padding:12px; font:inherit; color:inherit; background:transparent; border:1px solid currentColor; border-radius:10px; }
+.guest-directory-record { border-bottom:1px solid currentColor; padding:12px 0; overflow-wrap:anywhere; }
+.guest-directory-record summary { cursor:pointer; font-weight:600; }
+.guest-directory-record ul { padding-left:24px; line-height:1.7; }
+.guest-directory-record[hidden] { display:none; }
+.guest-install-banner { box-sizing:border-box; display:flex; align-items:flex-start; gap:0; max-width:440px; margin:14px auto 0; padding:0; background:linear-gradient(115deg,#14243f,#244678); color:#fff; border:1px solid #507fb7; border-radius:16px; box-shadow:0 0 0 3px rgba(78,145,227,.12),0 0 24px rgba(65,135,229,.30),0 6px 16px rgba(17,34,60,.20),inset 0 1px 0 rgba(255,255,255,.12); font-size:14px; line-height:1.5; }
+.guest-install-banner > div { flex:1; min-width:0; }
+.guest-install-banner summary { display:flex; align-items:center; gap:11px; cursor:pointer; font-weight:650; font-size:15px; letter-spacing:.1px; padding:10px 12px; min-height:54px; list-style:none; border-radius:15px 0 0 15px; transition:background .18s; }
+.guest-install-banner summary:hover { background:rgba(255,255,255,.09); }
+.guest-install-banner summary:active { background:rgba(0,0,0,.14); }
+.guest-install-banner summary::-webkit-details-marker { display:none; }
+.guest-install-glint { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; flex-shrink:0; border-radius:9px; color:#d9f1ff; background:rgba(142,195,255,.14); border:1px solid rgba(166,212,255,.35); font-size:21px; line-height:1; }
+.guest-install-chevron { margin-left:auto; color:#b9d8ff; font-size:18px; transition:transform .2s; }
+.guest-install-banner details[open] .guest-install-chevron { transform:rotate(180deg); }
+.guest-install-banner details[open] summary { border-bottom:1px solid rgba(171,206,255,.22); border-radius:15px 0 0 0; }
+.guest-install-banner p { margin:8px 16px 14px; font-size:13px; color:#e0eaf8; }
+.guest-install-banner ol { padding-left:32px; padding-right:14px; font-size:13px; color:#e0eaf8; }
+.guest-install-banner li { margin:10px 0; }
+.guest-install-dismiss { flex-shrink:0; min-width:44px; min-height:54px; border:0; border-left:1px solid rgba(171,206,255,.16); border-radius:0 15px 15px 0; background:transparent; color:#bed0e7; font:inherit; font-size:20px; cursor:pointer; }
+.guest-install-dismiss:hover { background:rgba(255,255,255,.08); color:#fff; }
+.guest-install-dismiss:focus-visible, .guest-install-banner summary:focus-visible { outline:2px solid #8ed9ff; outline-offset:3px; }
+@media(max-width:740px) { .guest-install-banner { margin:12px 16px 0; } }
+@media(prefers-reduced-motion:reduce) { .guest-install-chevron, .guest-install-banner summary { transition:none; } }
+@media(display-mode:standalone) { .guest-install-banner { display:none; } }
+
+/* Guest-facing reception seating lookup (/seating). */
+.seating-page{min-height:100vh;background:radial-gradient(circle at 50% -10%,rgba(210,171,91,.22),transparent 34%),linear-gradient(180deg,#fffdf8 0%,#f7f0e4 100%);color:#2f291f;padding:env(safe-area-inset-top,0) 18px calc(52px + env(safe-area-inset-bottom,0));}
+.seating-shell{width:min(760px,100%);margin:0 auto;}
+.seating-masthead{text-align:center;padding:42px 10px 28px;}
+.seating-monogram{display:inline-flex;align-items:center;justify-content:center;width:58px;height:58px;border:1px solid rgba(130,95,37,.38);border-radius:50%;font-family:var(--serif);font-size:17px;color:#7b5823;margin-bottom:20px;}
+.seating-kicker{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#88672e;margin-bottom:12px;}
+.seating-title{font-family:var(--serif);font-size:clamp(42px,11vw,68px);font-weight:400;line-height:1.02;letter-spacing:-.025em;}
+.seating-intro{max-width:500px;margin:16px auto 0;color:#6f6557;line-height:1.65;}
+.seating-search-panel{background:rgba(255,255,255,.82);border:1px solid rgba(130,95,37,.22);border-radius:24px;padding:20px;box-shadow:0 22px 60px rgba(75,55,25,.11);}
+.seating-search-label{display:block;font-size:13px;font-weight:750;letter-spacing:.04em;margin-bottom:9px;}
+.seating-search-wrap{position:relative;}
+.seating-search{width:100%;min-height:58px;border:1px solid rgba(83,66,41,.32);border-radius:14px;background:#fff;padding:0 52px 0 18px;color:#2f291f;font:inherit;font-size:18px;box-shadow:inset 0 1px 2px rgba(70,50,20,.04);}
+.seating-search:focus{outline:3px solid rgba(177,132,55,.2);border-color:#9b722e;}
+.seating-search-icon{position:absolute;right:18px;top:50%;width:22px;height:22px;transform:translateY(-50%);color:#8b744f;pointer-events:none;}
+.seating-hint{font-size:12px;color:#807564;margin-top:9px;}
+.seating-result{margin-top:16px;}
+.seating-result-card{border-radius:20px;background:linear-gradient(145deg,#173c39,#245a54);color:#fff;padding:24px;text-align:center;box-shadow:0 18px 40px rgba(19,58,54,.22);}
+.seating-result-name{font-size:16px;color:#e5d7ba;margin-bottom:10px;}
+.seating-result-label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#cfbd96;}
+.seating-result-number{font-family:var(--serif);font-size:64px;line-height:1;margin:8px 0 4px;}
+.seating-result-note{font-size:13px;color:#e7dfcf;}
+.seating-multiple-heading{text-align:center;margin:22px 0 14px;}
+.seating-multiple-heading strong{display:block;font-family:var(--serif);font-size:25px;font-weight:400;color:#3d3325;}
+.seating-multiple-heading span{display:block;margin-top:5px;font-size:13px;line-height:1.5;color:#746856;}
+.seating-match-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;}
+.seating-match-card{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:82px;border:1px solid rgba(216,189,130,.28);border-radius:16px;background:linear-gradient(145deg,#173c39,#245a54);padding:15px 16px;text-align:left;box-shadow:0 10px 24px rgba(19,58,54,.16);}
+.seating-match-name{font-weight:700;line-height:1.3;color:#fff;overflow-wrap:anywhere;}
+.seating-match-table{flex:none;text-align:center;color:#e3d1ad;}
+.seating-match-table span{display:block;font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;}
+.seating-match-table strong{display:block;font-family:var(--serif);font-size:32px;font-weight:400;line-height:1;}
+.seating-no-result{padding:18px;border-radius:16px;background:#fff9ed;border:1px solid rgba(153,107,35,.22);text-align:center;color:#675a47;line-height:1.5;}
+.seating-directory{margin-top:42px;}
+.seating-directory-head{text-align:center;margin-bottom:18px;}
+.seating-directory-head h2{font-family:var(--serif);font-size:34px;font-weight:400;margin-bottom:7px;}
+.seating-directory-head p{font-size:13px;color:#776b59;}
+.seating-table{background:rgba(255,255,255,.72);border:1px solid rgba(130,95,37,.17);border-radius:16px;margin:10px 0;overflow:hidden;}
+.seating-table summary{display:flex;justify-content:space-between;align-items:center;min-height:58px;padding:14px 17px;cursor:pointer;font-weight:700;list-style:none;}
+.seating-table summary::-webkit-details-marker{display:none;}
+.seating-table-count{font-size:12px;font-weight:500;color:#81745f;}
+.seating-table ul{columns:2;column-gap:30px;margin:0;padding:2px 38px 18px;line-height:1.8;color:#544b3e;}
+.seating-table li{break-inside:avoid;padding-left:2px;}
+.seating-back{display:inline-block;margin-top:28px;color:#705325;font-size:13px;text-decoration:none;border-bottom:1px solid currentColor;}
+@media(max-width:520px){.seating-masthead{padding-top:30px}.seating-search-panel{padding:16px;border-radius:20px}.seating-table ul{columns:1}.seating-result-number{font-size:58px}.seating-match-grid{grid-template-columns:1fr}}
+
+.portfolio-demo-banner{position:relative;z-index:1000;padding:9px 16px;text-align:center;background:#071c35;color:#f6fbff;font:600 12px/1.4 system-ui,sans-serif;letter-spacing:.02em}
+
+</style>
+</head>
+<body>
+
+<aside class="portfolio-demo-banner" role="note">
+  Portfolio demonstration · All people, dates, venues, and schedules are fictional.
+</aside>
+
+<div id="app"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* Synthetic portfolio data. No record in this file describes a real person or event. */
+const guestData = {
+  wedding: { coupleNames: "Avery & Jordan", primaryDate: "2027-06-12", hashtag: "#EverAfterDemo" },
+  photoGroups: [
+    { title: "Wedding Party", names: ["Alex Morgan", "Casey Brooks", "Taylor Reed", "Riley Lane"] },
+    { title: "College Friends", names: ["Jamie Park", "Cameron Stone", "Morgan Lee"] },
+    { title: "Family", names: ["Robin Hart", "Sam Hart", "Drew Quinn", "Skyler Quinn"] }
+  ],
+  seatingTables: [
+    { number: 1, guests: ["Alex Morgan", "Casey Brooks", "Taylor Reed"] },
+    { number: 2, guests: ["Jamie Park", "Cameron Stone", "Morgan Lee"] },
+    { number: 3, guests: ["Robin Hart", "Sam Hart", "Drew Quinn", "Skyler Quinn"] }
+  ],
+  venues: [
+    { id: "venue_garden", name: "Demo Garden Pavilion", address: "100 Example Way, Sample City, NY 10001", mapLinkable: false },
+    { id: "venue_hall", name: "Demo Skyline Hall", address: "200 Example Avenue, Sample City, NY 10001", mapLinkable: false },
+    { id: "venue_hotel", name: "Demo Harbor Hotel", address: "300 Example Plaza, Sample City, NY 10001", mapLinkable: false }
+  ],
+  events: [
+    { id: "event_mehndi", title: "Welcome Celebration", date: "2027-06-10", startTime: "2027-06-10T18:00:00-04:00", endTime: "2027-06-10T21:00:00-04:00", venueId: "venue_garden", lens: null },
+    { id: "event_vidhi", title: "Family Ceremony", date: "2027-06-11", startTime: "2027-06-11T10:00:00-04:00", endTime: "2027-06-11T12:30:00-04:00", venueId: "venue_garden", lens: null },
+    { id: "event_sangeet", title: "Music & Dance Night", date: "2027-06-11", startTime: "2027-06-11T18:30:00-04:00", endTime: "2027-06-11T22:30:00-04:00", venueId: "venue_hall", lens: null },
+    { id: "event_wedding", title: "Wedding Ceremony", date: "2027-06-12", startTime: "2027-06-12T15:00:00-04:00", endTime: "2027-06-12T17:30:00-04:00", venueId: "venue_garden", lens: null },
+    { id: "event_reception", title: "Reception", date: "2027-06-12", startTime: "2027-06-12T19:00:00-04:00", endTime: "2027-06-12T23:00:00-04:00", venueId: "venue_hall", lens: null },
+    { id: "event_farewell", title: "Farewell Brunch", date: "2027-06-13", startTime: "2027-06-13T10:00:00-04:00", endTime: "2027-06-13T12:00:00-04:00", venueId: "venue_hotel", lens: null }
+  ],
+  timelineItems: [
+    { id: "welcome_arrival", eventId: "event_mehndi", time: "2027-06-10T18:00:00-04:00", title: "Guest arrival", guestTitle: "Welcome & refreshments", rollupParentId: null, sourceTimeLabel: "6:00 PM", guestSubMoments: null },
+    { id: "welcome_dinner", eventId: "event_mehndi", time: "2027-06-10T19:00:00-04:00", title: "Dinner", guestTitle: "Dinner stations open", rollupParentId: null, sourceTimeLabel: "7:00 PM", guestSubMoments: null },
+    { id: "vidhi_one", eventId: "event_vidhi", time: "2027-06-11T10:00:00-04:00", title: "Partner One's Side — Family welcome", guestTitle: "Partner One's Side — Family welcome", rollupParentId: null, sourceTimeLabel: "10:00 AM", guestSubMoments: null },
+    { id: "vidhi_two", eventId: "event_vidhi", time: "2027-06-11T10:00:00-04:00", title: "Partner Two's Side — Family welcome", guestTitle: "Partner Two's Side — Family welcome", rollupParentId: null, sourceTimeLabel: "10:00 AM", guestSubMoments: null },
+    { id: "vidhi_merge", eventId: "event_vidhi", time: "2027-06-11T11:15:00-04:00", title: "Families come together", guestTitle: "Families come together", rollupParentId: null, sourceTimeLabel: "11:15 AM", guestSubMoments: null },
+    { id: "sangeet_open", eventId: "event_sangeet", time: "2027-06-11T18:30:00-04:00", title: "Doors open", guestTitle: "Doors open", rollupParentId: null, sourceTimeLabel: "6:30 PM", guestSubMoments: null },
+    { id: "sangeet_show", eventId: "event_sangeet", time: "2027-06-11T20:00:00-04:00", title: "Performances", guestTitle: "Music and dance performances", rollupParentId: null, sourceTimeLabel: "8:00 PM", guestSubMoments: ["Family performances", "Friends' showcase", "Open dance floor"] },
+    { id: "wedding_arrival", eventId: "event_wedding", time: "2027-06-12T14:30:00-04:00", title: "Guest arrival", guestTitle: "Guest arrival", rollupParentId: null, sourceTimeLabel: "2:30 PM", guestSubMoments: null },
+    { id: "wedding_ceremony", eventId: "event_wedding", time: "2027-06-12T15:00:00-04:00", title: "Ceremony", guestTitle: "Wedding ceremony", rollupParentId: null, sourceTimeLabel: "3:00 PM", guestSubMoments: ["Processional", "Ceremony", "Recessional"] },
+    { id: "reception_cocktails", eventId: "event_reception", time: "2027-06-12T19:00:00-04:00", title: "Cocktail hour", guestTitle: "Cocktail hour", rollupParentId: null, sourceTimeLabel: "7:00 PM", guestSubMoments: null },
+    { id: "reception_dinner", eventId: "event_reception", time: "2027-06-12T20:00:00-04:00", title: "Dinner", guestTitle: "Dinner & toasts", rollupParentId: null, sourceTimeLabel: "8:00 PM", guestSubMoments: null },
+    { id: "brunch", eventId: "event_farewell", time: "2027-06-13T10:00:00-04:00", title: "Brunch", guestTitle: "Farewell brunch", rollupParentId: null, sourceTimeLabel: "10:00 AM", guestSubMoments: null }
+  ],
+  transportation: [
+    { id: "shuttle_reception", eventId: "event_reception", pickupVenueId: "venue_hotel", destinationVenueId: "venue_hall", departureTime: "2027-06-12T18:30:00-04:00", arrivalTime: "2027-06-12T18:50:00-04:00", guestInstructions: "Demo shuttle departs from the hotel lobby.", lifecycle: "confirmed" }
+  ]
+};
+
+
+/* ==========================================================================
+   OUR WEDDING — GUEST APPLICATION (standalone build)
+   ==========================================================================
+   This is the ENTIRE client-side logic for the public Guest site. It is a
+   separate, self-contained application — not a mode inside the private
+   planning application. It never references the private application's own
+   full in-memory dataset or its seed of authored planning work, never
+   contains its access code, and contains none of its operational
+   rendering code (the internal dashboard, task/decision/note management,
+   the advanced-tools surface, detail drawers, etc.) — that code simply
+   does not exist in this file, so there is nothing here that could leak it.
+
+   It reads exactly one data source: `guestData`, defined in
+   guest-data.generated.js immediately before this file in the built
+   guest/index.html. guestData is produced by build/generate_guest_data.js,
+   which walks the canonical data.js and copies out only an explicit,
+   positive allowlist of fields the functions below actually read — see
+   that script for the allowlist itself. If a function below doesn't read
+   a field, that field was never copied into guestData in the first place.
+
+   Most of the query-layer functions here (guestEvents, guestTimeline,
+   timelineQuery, rollup helpers, phase/date helpers, transportation
+   filtering) are intentionally near-identical to the equivalent functions
+   in the Wedding Team app's app.js — same names, same logic — because they
+   were always the "guest read layer" of one shared design, and keeping the
+   logic identical is what makes it possible to verify by inspection that
+   this file behaves exactly like the guest experience already did inside
+   the combined prototype. The difference is what they read (guestData,
+   already pre-filtered and field-stripped at build time) and what code
+   surrounds them (nothing operational).
+   ========================================================================== */
+(function(){
+"use strict";
+
+/* ---------------------------- Constants ---------------------------- */
+const ICONS = {
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+  mapPin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+};
+
+/* GUEST PREVIEW MODE (2026-08-29): namespaced independently of the Wedding
+   Team app's own localStorage keys (which this build never even ships the
+   code to read/write) — purely a QA/preview convenience for maintainers, holds
+   only a timestamp, never wedding content. An ordinary guest never sees or
+   sets this: the demo clock control (see guestDemoClockHtml() /
+   wireGuestDemoClock() below) is opt-in, appearing only when the page URL
+   carries ?demo=1 (isPreviewMode()). Without that query parameter, every
+   visitor gets real time, unconditionally — loadPersisted() below ignores
+   any stored value entirely when not in preview mode, so a stray
+   left-over localStorage entry (e.g. from a previous preview session on a
+   shared or borrowed device) can never leak simulated time to a real
+   guest. This replaces an earlier build's always-on simulated-date
+   fallback, which made every guest see a permanently simulated date and a
+   permanent "Preview mode" banner with no way back to real time short of
+   editing devtools — not appropriate once the site is live for real
+   guests. */
+const LS_KEYS = { SIM_DATE: "wos_guest_sim_date" };
+/* Preset "jump to" moments for the guest demo clock — one representative,
+   comfortably-inside-the-window timestamp per event (mirrors the ops
+   Wedding Team app's own demo-clock presets for Mehndi/Vidhi/Sangeet/
+   Wedding; Reception and Farewell are guest-specific additions since the
+   guest site has no finer ops-only sub-moments like Photo Groups or
+   Reception Seating to jump to separately). Format matches
+   <input type="datetime-local"> (no seconds), same as team-app.js. */
+const GUEST_DEMO_PRESETS = [
+  {value: "2027-06-10T18:15", label: "Welcome · 6:15 PM"},
+  {value: "2027-06-11T10:00", label: "Family Ceremony · 10:00 AM"},
+  {value: "2027-06-11T19:30", label: "Music Night · 7:30 PM"},
+  {value: "2027-06-12T15:00", label: "Wedding · 3:00 PM"},
+  {value: "2027-06-12T19:00", label: "Reception · 7:00 PM"},
+  {value: "2027-06-13T10:00", label: "Farewell Brunch · 10:00 AM"}
+];
+/* True only when this page load explicitly opted into preview mode via
+   ?demo=1 in the URL. The guest site is a single-page app with no
+   internal link ever changing location.search (every internal "nav" is a
+   JS state change via data-guest-nav buttons — see wireGuestShellEvents;
+   the only <a href> elements are external, target="_blank" links to the
+   Lens camera and Google Maps), so this stays true for the whole visit
+   without any extra plumbing to "preserve" the query string on navigation. */
+function isPreviewMode(){
+  try{ return new URLSearchParams(location.search).get("demo") === "1"; }
+  catch(e){ return false; }
+}
+
+/* ---------------------------- State ---------------------------- */
+const state = {
+  guestView: "home",          // home | timeline
+  guestScheduleEventId: null, // null = event picker; an event id = that event's schedule
+  simDate: null
+};
+
+const data = guestData; // guestData is defined in guest-data.generated.js, loaded just before this file
+
+function loadPersisted(){
+  /* Ordinary guests (no ?demo=1): always real time, full stop — never
+     even consult localStorage, so no stored preview state can leak. */
+  if(!isPreviewMode()){ state.simDate = null; return; }
+  /* Preview mode: restore whatever simulated time (if any) was last
+     applied, so navigating Home/Schedule — or reloading — within the same
+     browser keeps showing the same moment until Real Time is pressed. */
+  try{
+    const simIso = localStorage.getItem(LS_KEYS.SIM_DATE);
+    state.simDate = (simIso && !Number.isNaN(new Date(simIso).getTime())) ? new Date(simIso) : null;
+  }catch(e){ state.simDate = null; }
+}
+
+/* ---------------------------- Utils ---------------------------- */
+function now(){ return state.simDate ? state.simDate : new Date(); }
+function isDemoClock(){ return !!state.simDate; }
+function byId(arr, id){ return arr.find(x=>x.id===id); }
+function ev(id){ return byId(data.events, id); }
+function tlItem(id){ return byId(data.timelineItems, id); }
+function venueOf(id){ return byId(data.venues, id); }
+
+function fmtDate(d, opts){
+  const date = (d instanceof Date) ? d : new Date(d);
+  return date.toLocaleDateString('en-US', opts || {month:'short', day:'numeric'});
+}
+function fmtTime(d){
+  const date = (d instanceof Date) ? d : new Date(d);
+  return date.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', hour12:true});
+}
+/* GUEST MAIN-POINT TIMELINE correction (2026-08-22): a public highlight
+   sourced from the Sheet carries its exact authored time text
+   (sourceTimeLabel — a single time like "6:00 PM," or a range like
+   "10:30:00 - 12:30:00 AM"). team-app.js shows that text verbatim; the
+   guest site instead runs it through normalizeTimeLabel() first (see
+   below) so a raw Sheet artifact like "12:00:00 PM - 2:00:00 PM" never
+   reaches a guest as-is. Every other public timeline item (none of which
+   carry sourceTimeLabel) falls back to fmtTime() as before, which never
+   includes seconds. */
+function displayTimeLabel(item){
+  return item.sourceTimeLabel != null ? normalizeTimeLabel(item.sourceTimeLabel) : fmtTime(item.time);
+}
+/* RESPONSIVE / TIME NORMALIZATION sweep (2026-08-29): sourceTimeLabel is
+   hand-authored Sheet text and is not always clean — seconds sometimes
+   survive ("12:00:00 PM - 2:00:00 PM"), a leading zero sometimes survives
+   ("01:00:00"), and the AM/PM marker is sometimes only given on one side
+   of a range ("01:00:00 - 2:00:00 PM"). Guests should never see any of
+   that — only "12:00 PM – 2:00 PM" / "1:00 PM – 2:00 PM" style output:
+   hour/minute/AM-PM preserved, seconds dropped, en dash between range
+   ends. A single time (no range) is normalized the same way. Anything
+   that doesn't parse as a recognizable time or time range (should not
+   happen with well-formed Sheet data) is returned unchanged rather than
+   risk mangling it. */
+function normalizeTimeLabel(raw){
+  if(typeof raw === "number" && Number.isFinite(raw)) {
+    const minutes = Math.floor(((raw % 1 + 1) % 1) * 1440 + 1e-7);
+    return `${Math.floor(minutes / 60) % 12 || 12}:${String(minutes % 60).padStart(2,"0")} ${minutes < 720 ? "AM" : "PM"}`;
+  }
+  if(typeof raw !== "string") return raw;
+  const TIME_RE = /^(\d{1,2}):(\d{2})(?::\d{2}(?:\.\d+)?)?\s*([AaPp][Mm])?$/;
+  const parseToken = (tok) => {
+    const m = tok.trim().match(TIME_RE);
+    if(!m || Number(m[1]) > 23 || Number(m[2]) > 59) return null;
+    return {hour: parseInt(m[1], 10), minute: m[2], meridiem: m[3] ? m[3].toUpperCase() : null};
+  };
+  /* Minutes since midnight under an assumed meridiem — comparisons below
+     use full minute precision, not just the hour. */
+  const toMin = (t, meridiem) => ((t.hour % 12) + (meridiem === "PM" ? 12 : 0)) * 60 + parseInt(t.minute, 10);
+  const fmt = (t) => `${t.hour % 12 || 12}:${t.minute} ${t.meridiem}`;
+  const rangeMatch = raw.match(/^\s*(.+?)\s*[-\u2013\u2014]\s*(.+?)\s*$/);
+  if(rangeMatch){
+    const start = parseToken(rangeMatch[1]);
+    const end = parseToken(rangeMatch[2]);
+    if(start && end){
+      /* When only one side carries AM/PM, first try giving the bare side
+         the same meridiem; if that would make the range run backwards,
+         the authored intent must be the other meridiem — which also
+         handles cross-midnight ranges naturally ("10:30 - 12:30 AM"
+         means 10:30 PM – 12:30 AM: same-meridiem reads backwards, so
+         the start flips to PM; "11:00 PM - 1:00" flips the end to AM). */
+      if(!start.meridiem && end.meridiem){
+        const same = end.meridiem, other = same === "AM" ? "PM" : "AM";
+        start.meridiem = toMin(start, same) <= toMin(end, end.meridiem) ? same : other;
+      } else if(!end.meridiem && start.meridiem){
+        const same = start.meridiem, other = same === "AM" ? "PM" : "AM";
+        end.meridiem = toMin(end, same) >= toMin(start, start.meridiem) ? same : other;
+      }
+      if(!start.meridiem && !end.meridiem) {
+        start.meridiem = start.hour < 12 ? "AM" : "PM";
+        end.meridiem = end.hour < 12 ? "AM" : "PM";
+      }
+      if(start.meridiem && end.meridiem) return `${fmt(start)} \u2013 ${fmt(end)}`;
+    }
+  }
+  const single = parseToken(raw);
+  if(single){
+    single.meridiem ||= single.hour < 12 ? "AM" : "PM";
+    return fmt(single);
+  }
+  // Preserve explanatory text while removing embedded clock seconds.
+  return raw.replace(/\b(\d{1,2}):(\d{2}):\d{2}(?:\.\d+)?/g, "$1:$2");
+}
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function isSameDay(dateA, dateB){
+  return dateA.getFullYear()===dateB.getFullYear() && dateA.getMonth()===dateB.getMonth() && dateA.getDate()===dateB.getDate();
+}
+let toastTimer = null;
+function toast(msg){
+  const el = document.getElementById("toast");
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), 2600);
+}
+
+function itemsForEvent(eventId){
+  return data.timelineItems.filter(t=>t.eventId===eventId).sort((a,b)=>new Date(a.time)-new Date(b.time));
+}
+function allItemsSorted(){
+  return data.timelineItems
+    .map((it, i) => ({it, i}))
+    .sort((a,b)=> (new Date(a.it.time) - new Date(b.it.time)) || (a.i - b.i))
+    .map(x => x.it);
+}
+
+/* ============================================================
+   TIMELINE — the same public-only read layer the combined app used
+   (timelineQuery/rollup helpers), operating over a dataset that is
+   ALREADY public-only by construction (guest-data.generated.js never
+   includes an internal/ops-audience timeline item at all). The rollup
+   guard below is kept for correctness/forward-compatibility even though
+   no record in the current dataset exercises it.
+   ============================================================ */
+function rollupParentOf(item){
+  if(!item || !item.rollupParentId) return null;
+  const p = tlItem(item.rollupParentId);
+  if(!p || p.rollupParentId) return null;
+  return p;
+}
+function childrenOf(itemId){
+  const parent = tlItem(itemId);
+  if(!parent || parent.rollupParentId) return [];
+  return allItemsSorted().filter(x=>x.rollupParentId === itemId);
+}
+function displayTitle(item){
+  return item.guestTitle || item.title;
+}
+function endTimeOf(item){
+  const start = new Date(item.time).getTime();
+  const sorted = allItemsSorted();
+  const idx = sorted.findIndex(x=>x.id===item.id);
+  const nextInEvent = sorted.slice(idx+1).find(x=>x.eventId===item.eventId);
+  if(nextInEvent) return new Date(nextInEvent.time).getTime();
+  const parentEvent = ev(item.eventId);
+  if(parentEvent) return new Date(parentEvent.endTime).getTime();
+  return start + 20*60000;
+}
+function spanEndOf(item){
+  const kids = childrenOf(item.id);
+  if(!kids.length) return endTimeOf(item);
+  return Math.max(endTimeOf(item), endTimeOf(kids[kids.length-1]));
+}
+function dayKeyOf(item){
+  const e = ev(item.eventId);
+  return (e && e.date) ? e.date : String(item.time).slice(0,10);
+}
+function deriveDayGroups(){
+  const byDay = new Map();
+  data.events.forEach(e=>{
+    if(!e.date) return;
+    if(!byDay.has(e.date)) byDay.set(e.date, []);
+    byDay.get(e.date).push(e);
+  });
+  const days = [...byDay.keys()].sort();
+  return days.map(d=>{
+    const evs = byDay.get(d).sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
+    const dayLabel = fmtDate(d+"T12:00:00", {month:'short', day:'numeric'});
+    return { id:d, label:`${dayLabel} · ${evs.map(e=>e.title).join(" & ")}`, shortLabel:dayLabel, events:evs };
+  });
+}
+function weddingWeekBounds(){
+  const dates = data.events.map(e=>e.date).filter(Boolean).sort();
+  const fallback = data.wedding.primaryDate;
+  return { start: dates[0] || fallback, end: dates[dates.length-1] || fallback };
+}
+function timelineQuery(opts){
+  const o = opts || {};
+  let items = allItemsSorted();
+  if(o.eventId) items = items.filter(it=>it.eventId === o.eventId);
+  if(o.rollup) items = items.filter(it=>!rollupParentOf(it));
+  return items;
+}
+
+/* VENUE AND TIMELINE DATA RESET milestone (2026-08-21): this used to
+   filter out any event with zero timeline items — which, with
+   data.timelineItems now empty by design, hid every single event from
+   the guest site permanently. Events are their own real thing (title,
+   date, venue, dress code) independent of whether a detailed moment-by-
+   moment schedule has been authored under them yet; requirement 5 is
+   explicit that events must stay visible even with no timeline. This
+   function is now a plain sorted list of every event — nothing is
+   gated on timeline-item presence anymore. */
+function guestEvents(){
+  return [...data.events]
+    .sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
+}
+function guestTimeline(){ return timelineQuery({rollup:true}); }
+function guestTimelineForEvent(eventId){ return guestTimeline().filter(it=>it.eventId===eventId); }
+function guestCurrentItem(){
+  const t = now().getTime();
+  return guestTimeline().find(it=>{
+    const start = new Date(it.time).getTime();
+    const event = ev(it.eventId);
+    return event && t >= new Date(event.startTime).getTime() && t < new Date(event.endTime).getTime() && t >= start && t < spanEndOf(it);
+  }) || null;
+}
+function guestUpcomingItem(){
+  const t = now().getTime();
+  return guestTimeline().find(it => {
+    const event = ev(it.eventId), start = new Date(it.time).getTime();
+    return event && start > t && start >= new Date(event.startTime).getTime() && start < new Date(event.endTime).getTime();
+  }) || null;
+}
+function guestLiveEvent(){
+  const t = now().getTime();
+  return guestEvents().find(e=>{
+    const start = new Date(e.startTime).getTime();
+    const end = new Date(e.endTime).getTime();
+    return t >= start && t < end;
+  }) || null;
+}
+function guestLiveEventId(){
+  const cur = guestCurrentItem();
+  if(cur) return cur.eventId;
+  const liveEvent = guestLiveEvent();
+  return liveEvent ? liveEvent.id : null;
+}
+/* EVENT PHOTO CAMERA: no generic fallback. A camera link is eligible only
+   for the one event that is live and only when its checked-in URL is https.
+   This intentionally requires a user tap—automatic popups/redirects are
+   blocked inconsistently on mobile and are disorienting to a first-time
+   guest. Once opened, the external Lens experience owns its own camera and
+   lock-screen/live-notification behavior. */
+function guestPhotoLinkForEvent(eventId){
+  const event = ev(eventId);
+  const config = event && event.lens;
+  if(!config || typeof config.url !== "string" || !/^https:\/\//i.test(config.url)) return null;
+  return config;
+}
+/* GUEST MEHNDI COPY (2026-08-29): the disabled card previously stacked three
+   separate "not available" signals — an eyebrow pill, this h2, and the
+   button label — which read as noisy/redundant. Now there is exactly one
+   status message on the disabled button itself plus one explanatory
+   heading naming *when* it opens; the eyebrow pill is dropped
+   entirely rather than repeating the same idea a third way. Guest-only —
+   the ops preview's own copy (team-app.js) is intentionally left as-is. */
+function guestPhotoDisabledCardHtml(event){
+  return `
+    <section class="guest-live-photo-wrap" aria-label="Photo sharing for ${esc(event.title)} — check back tomorrow">
+      <div class="guest-live-photo-card is-disabled">
+        <div class="guest-live-photo-icon">${ICONS.camera}</div>
+        <h2>Photo Sharing Starts at the Family Ceremony</h2>
+        <p>We can't wait to see the celebration through your eyes — the shared camera opens once the family ceremony begins.</p>
+        <button class="guest-live-photo-button is-disabled" type="button" disabled aria-disabled="true">${ICONS.camera} Check back tomorrow</button>
+      </div>
+    </section>
+  `;
+}
+/* PRE-EVENT CAMERA DISCOVERY milestone (2026-08-30): before the very
+   first celebration begins (the earliest event in data.events — via
+   guestEvents(), already sorted by startTime, currently Mehndi), Home
+   shows a compact, disabled coming-soon card so guests can discover the
+   camera feature early rather than seeing nothing. Scoped to the plain
+   Home call (no requestedEventId) so a specific event's own schedule-
+   page CTA (renderGuestScheduleForEvent) is untouched. Driven entirely
+   through the shared now() against real event data — never a hardcoded
+   date — so ?demo=1 previews it exactly like every other live-status
+   surface. Once any real event goes live this is unreachable, so live
+   activation, the Mehndi-disabled card, between-event gaps and post-
+   wedding behavior are all unchanged. */
+function guestPhotoComingSoonCardHtml(){
+  return `
+    <section class="guest-live-photo-wrap" aria-label="Event camera — coming soon">
+      <div class="guest-live-photo-card is-disabled">
+        <div class="guest-live-photo-icon">${ICONS.camera}</div>
+        <h2>Event Camera</h2>
+        <p>Photo sharing starts at the family ceremony.</p>
+        <button class="guest-live-photo-button is-disabled" type="button" disabled aria-disabled="true">${ICONS.camera} Check back in during the next event.</button>
+      </div>
+    </section>
+  `;
+}
+function guestLivePhotoCtaHtml(requestedEventId){
+  const liveEventId = guestLiveEventId();
+  if(!liveEventId){
+    if(!requestedEventId){
+      const earliest = guestEvents()[0];
+      if(earliest && now() < new Date(earliest.startTime)) return guestPhotoComingSoonCardHtml();
+    }
+    return "";
+  }
+  if(requestedEventId && requestedEventId !== liveEventId) return "";
+  const event = ev(liveEventId);
+  if(!event) return "";
+  if(event.id === MEHNDI_EVENT_ID){
+    return guestPhotoDisabledCardHtml(event);
+  }
+  const config = guestPhotoLinkForEvent(liveEventId);
+  if(!config) return "";
+  const qr = typeof config.qrImageUrl === "string" && /^(?:https:\/\/|qr\/)/i.test(config.qrImageUrl)
+    ? `<details class="guest-live-photo-qr"><summary>Show QR code</summary><img src="${esc(config.qrImageUrl)}" alt="QR code for the ${esc(event.title)} event camera"></details>`
+    : "";
+  return `
+    <section class="guest-live-photo-wrap" aria-label="Share photos from ${esc(event.title)}">
+      <div class="guest-live-photo-card">
+        <div class="guest-live-photo-eyebrow"><span></span> Live at ${esc(event.title)}</div>
+        <div class="guest-live-photo-icon">${ICONS.camera}</div>
+        <h2>Take a Photo With Us</h2>
+        <p>We’d love to experience the celebration through your eyes. Capture and share the moments that stand out to you.</p>
+        <a class="guest-live-photo-button" href="${esc(config.url)}" target="_blank" rel="noopener" aria-label="Open the ${esc(event.title)} event camera to add photos (opens in a new tab)">${ICONS.camera} Open Event Camera</a>
+        ${qr}
+        ${data.wedding.hashtag ? `<div class="guest-live-photo-hashtag"><span>Keep sharing with</span><strong>${esc(data.wedding.hashtag)}</strong></div>` : ""}
+      </div>
+    </section>
+  `;
+}
+function guestLiveSeatingCtaHtml(){
+  if(guestLiveEventId() !== "event_reception") return "";
+  return `
+    <section class="guest-live-seating-wrap" aria-label="Find your reception table">
+      <div class="guest-live-seating-card">
+        <div class="guest-live-seating-eyebrow"><span></span> Reception seating is open</div>
+        <h2>Find Your Table</h2>
+        <p>Search your name for your table number, or browse the full seating list.</p>
+        <a class="guest-live-seating-button" href="/seating">Find My Table ${ICONS.chevron}</a>
+      </div>
+    </section>
+  `;
+}
+function guestDayGroups(){
+  const ids = new Set(guestEvents().map(e=>e.id));
+  return deriveDayGroups()
+    .map(d => ({...d, events: d.events.filter(e=>ids.has(e.id))}))
+    .filter(d => d.events.length);
+}
+
+/* Event atmosphere changes only the visual tokens. Navigation, spacing,
+   controls, and content structure stay identical so first-time guests never
+   have to relearn the site as the celebration moves between events. */
+function guestThemeEvent(){
+  if(state.guestView === "timeline" && state.guestScheduleEventId){
+    const selected = ev(state.guestScheduleEventId);
+    if(selected) return selected;
+  }
+  return guestRelevantEvent();
+}
+/* COUNTDOWN THEME milestone (2026-08-30): before the very first
+   celebration begins, guest Home used to inherit Mehndi's own green
+   theme purely because guestRelevantEvent()'s planning-phase fallback is
+   events[0] (the earliest event — Mehndi). This gives that pre-event
+   state its own neutral champagne/ivory identity instead, WITHOUT
+   touching guestThemeEvent()/guestRelevantEvent() themselves (still used
+   exactly as before once an explicit schedule selection, or an actual
+   live event, applies) — opening Mehndi's own schedule page, or Mehndi
+   actually being live, both still take precedence and show green,
+   unchanged. Driven by the shared now() against the earliest real event
+   start in data.events, same pattern as the pre-event camera card. */
+function guestThemeClass(){
+  const explicitlySelected = state.guestView === "timeline" && state.guestScheduleEventId && ev(state.guestScheduleEventId);
+  const earliestEvent = guestEvents()[0];
+  if(!explicitlySelected && !guestLiveEvent() && earliestEvent && now() < new Date(earliestEvent.startTime)){
+    return "guest-theme-countdown";
+  }
+  const event = guestThemeEvent();
+  return event ? `guest-theme-${event.id.replace(/^event_/, "")}` : "guest-theme-default";
+}
+function applyGuestTheme(){
+  const app = document.querySelector(".guest-app");
+  if(!app) return;
+  [...app.classList].filter(name=>name.startsWith("guest-theme-")).forEach(name=>app.classList.remove(name));
+  app.classList.add(guestThemeClass());
+}
+
+function getPhase(){
+  const t = now();
+  const bounds = weddingWeekBounds();
+  const weekStart = new Date(bounds.start+"T00:00:00");
+  const weekEnd = new Date(bounds.end+"T23:59:59");
+  if(t < weekStart) return "planning";
+  if(t > weekEnd) return "post";
+  return "week";
+}
+function daysUntil(targetIso){
+  const t = now();
+  const target = new Date(targetIso+"T00:00:00");
+  const ms = target - new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  return Math.round(ms / 86400000);
+}
+
+/* ---- Transportation: guest gate only (confirmed + public), matching the
+   Team app's guestFacingTransportation() exactly — kept here for parity
+   even though guestData.transportation is already pre-filtered to this
+   same gate at build time (defense in depth, zero-cost given how small
+   the array is). ---- */
+function allTransportation(){ return data.transportation || []; }
+function isGuestFacingTransportation(t){ return t.lifecycle === "confirmed"; }
+function guestFacingTransportation(eventId){
+  return allTransportation()
+    .filter(isGuestFacingTransportation)
+    .filter(t=>!eventId || t.eventId === eventId)
+    .sort((a,b)=>new Date(a.departureTime)-new Date(b.departureTime));
+}
+function transportationLabel(t){
+  const pickup = venueOf(t.pickupVenueId)?.name || "Pickup TBD";
+  const dest = venueOf(t.destinationVenueId)?.name || "Destination TBD";
+  return `${pickup} → ${dest}`;
+}
+
+function venueHasUsableAddress(venue){
+  return !!(venue && venue.address && venue.mapLinkable !== false);
+}
+
+/* ============================================================
+   OUR WEDDING — the guest experience UI.
+   ============================================================ */
+function coupleMonogram(){
+  const parts = String(data.wedding.coupleNames||"").split(/\s*&\s*/).filter(Boolean);
+  if(parts.length < 2) return esc(data.wedding.coupleNames||"");
+  return esc(parts.map(p=>p.trim()[0]).join(" & "));
+}
+
+function guestPreviewLabelHtml(){
+  if(!isDemoClock()) return "";
+  return `
+    <div class="guest-preview-banner">
+      <span class="guest-preview-banner-inner">
+        <span class="guest-preview-banner-dot"></span>
+        Preview mode · Simulated ${esc(fmtDate(now(),{weekday:'long',month:'long',day:'numeric'}))} at ${esc(fmtTime(now()))}
+      </span>
+    </div>
+  `;
+}
+/* Same shape team-app.js's localDateTimeValue() uses for its own
+   <input type="datetime-local"> value — local (not UTC) Y-M-DTH:M. */
+function localDateTimeValue(value){
+  const d = new Date(value);
+  const pad = n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+/* GUEST DEMO CLOCK (2026-08-29): a compact, collapsed-by-default control —
+   a native <details>/<summary> disclosure needs no open/close JS and stays
+   keyboard/mobile accessible for free, exactly like team-app.js's own
+   demo-clock-control and this build's own guest-moment-detail pattern.
+   Only ever rendered when isPreviewMode() is true (see renderGuestShell()
+   below); an ordinary guest's page never contains this markup at all. The
+   summary row doubles as the "Demo" badge requirement: while a simulated
+   time is active it shows "Demo · <date>, <time>" (and the <details> stays
+   open); on Real Time it collapses back to a plain "Preview Clock" label. */
+function guestDemoClockHtml(){
+  return `
+    <details class="guest-demo-clock" ${state.simDate ? "open" : ""}>
+      <summary>
+        <span class="guest-demo-badge-dot"></span>
+        <span>${state.simDate ? `Demo · ${esc(fmtDate(now(),{month:'short',day:'numeric'}))}, ${esc(fmtTime(now()))}` : "Preview Clock"}</span>
+      </summary>
+      <div class="guest-demo-clock-panel">
+        <label for="guest-demo-preset">Jump to</label>
+        <select id="guest-demo-preset">
+          <option value="">Choose a moment…</option>
+          ${GUEST_DEMO_PRESETS.map(p=>`<option value="${p.value}">${esc(p.label)}</option>`).join("")}
+        </select>
+        <label for="guest-demo-custom">Custom date &amp; time</label>
+        <input id="guest-demo-custom" type="datetime-local" value="${localDateTimeValue(now())}">
+        <div class="guest-demo-clock-actions">
+          <button class="guest-demo-btn" id="guest-demo-apply" type="button">Apply</button>
+          <button class="guest-demo-btn" id="guest-demo-live" type="button">Real Time</button>
+        </div>
+      </div>
+    </details>
+  `;
+}
+function wireGuestDemoClock(){
+  if(!isPreviewMode()) return;
+  const preset = document.getElementById("guest-demo-preset");
+  const custom = document.getElementById("guest-demo-custom");
+  const apply = document.getElementById("guest-demo-apply");
+  const live = document.getElementById("guest-demo-live");
+  function setDemo(value){
+    if(!value) return;
+    const d = new Date(value);
+    if(Number.isNaN(d.getTime())) return;
+    state.simDate = d;
+    try{ localStorage.setItem(LS_KEYS.SIM_DATE, d.toISOString()); }catch(e){}
+    renderShell(); renderActiveView();
+  }
+  if(preset) preset.addEventListener("change", ()=>setDemo(preset.value));
+  if(apply) apply.addEventListener("click", ()=>setDemo(custom.value));
+  if(live) live.addEventListener("click", ()=>{
+    state.simDate = null;
+    try{ localStorage.removeItem(LS_KEYS.SIM_DATE); }catch(e){}
+    renderShell(); renderActiveView();
+  });
+}
+
+// Home Screen installation remains a guest choice; never block the schedule.
+let installBannerDismissed = false;
+function isGuestStandalone(){
+  return navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+}
+function guestInstallBannerHtml(){
+  const isAppleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if((!isAppleMobile && !isAndroid) || isGuestStandalone() || installBannerDismissed) return "";
+  try { if(localStorage.getItem('wedding_guest_install_dismissed') === '1') return ""; } catch(e) {}
+  return `<aside class="guest-install-banner" aria-label="Save to Home Screen">
+    <div><details><summary><span class="guest-install-glint" aria-hidden="true">↓</span> Save to Home Screen <span class="guest-install-chevron" aria-hidden="true">⌄</span></summary>
+        ${isAndroid ? `<ol><li>Open this website in Chrome. If you scanned the QR code in another app, open its menu and choose to open in Chrome first.</li><li>Tap the three-dot menu, then <strong>Add to Home screen</strong> or <strong>Install and create shortcut</strong>.</li><li>Choose <strong>Install</strong> if offered, or <strong>Create shortcut</strong>, then confirm <strong>Add</strong>.</li></ol><p>A shortcut may open in Chrome rather than a separate app window. You can dismiss this suggestion after adding it.</p>` : `<ol><li>Open this website in Safari.</li><li>Tap Share (the square with an upward arrow). It may be inside the More menu.</li><li>Choose <strong>Add to Home Screen</strong>. If shown, leave <strong>Open as Web App</strong> on, then tap <strong>Add</strong>.</li></ol>`}
+        <p>No download or account needed. You can keep browsing without adding it.</p>
+      </details>
+    </div>
+    <button class="guest-install-dismiss" type="button" data-dismiss-install aria-label="Dismiss save app suggestion">×</button>
+  </aside>`;
+}
+function renderGuestShell(){
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="guest-app ${guestThemeClass()}">
+      <header class="guest-header">
+        <div class="guest-header-inner">
+          <button class="guest-wordmark" id="guest-logo-btn" aria-label="Our Wedding home">${coupleMonogram()}</button>
+          <nav class="guest-nav" aria-label="Our Wedding navigation">
+            <button class="guest-nav-link ${state.guestView==='home'?'active':''}" data-guest-nav="home">Home</button>
+            <button class="guest-nav-link ${state.guestView==='timeline'?'active':''}" data-guest-nav="timeline">Schedule</button>
+          </nav>
+        </div>
+      </header>
+      ${guestInstallBannerHtml()}
+      <main id="guest-view-home" class="guest-view"></main>
+      <main id="guest-view-timeline" class="guest-view"></main>
+      <footer class="guest-footer">
+        ${isGuestStandalone() ? `<button type="button" class="guest-nav-link" data-refresh-guest>Refresh latest schedule</button>` : ""}
+        <div class="guest-footer-mark">${esc(data.wedding.coupleNames)}</div>
+        <div class="guest-footer-date">${fmtDate(weddingWeekBounds().start+"T00:00:00",{month:'long', year:'numeric'})}</div>
+        ${isPreviewMode() ? guestDemoClockHtml() : ""}
+      </footer>
+    </div>
+  `;
+  wireGuestShellEvents();
+}
+
+function wireGuestShellEvents(){
+  document.querySelector('[data-dismiss-install]')?.addEventListener('click', (event)=>{
+    installBannerDismissed = true;
+    try { localStorage.setItem('wedding_guest_install_dismissed', '1'); } catch(e) {}
+    event.currentTarget.closest('.guest-install-banner').remove();
+  });
+  document.querySelector('[data-refresh-guest]')?.addEventListener('click', ()=>window.location.reload());
+  document.querySelectorAll("[data-guest-nav]").forEach(b=>b.addEventListener("click", ()=>{
+    const target = b.getAttribute("data-guest-nav");
+    if(target === "timeline") state.guestScheduleEventId = null;
+    state.guestView = target;
+    renderShell(); renderActiveView();
+    window.scrollTo(0, 0);
+  }));
+  document.getElementById("guest-logo-btn")?.addEventListener("click", ()=>{
+    state.guestView = "home"; renderShell(); renderActiveView();
+    window.scrollTo(0, 0);
+  });
+  wireGuestDemoClock();
+}
+
+function renderGuestActiveView(){
+  document.querySelectorAll(".guest-view").forEach(v=>v.classList.remove("active"));
+  if(state.guestView === "timeline"){
+    document.getElementById("guest-view-timeline").classList.add("active");
+    renderGuestTimeline();
+  } else {
+    document.getElementById("guest-view-home").classList.add("active");
+    renderGuestHome();
+  }
+}
+
+function guestRelevantEvent(){
+  const phase = getPhase();
+  const events = guestEvents();
+  if(!events.length) return null;
+  if(phase === "week"){
+    const cur = guestCurrentItem();
+    if(cur) return ev(cur.eventId);
+    const liveEvent = guestLiveEvent();
+    if(liveEvent) return liveEvent;
+    const up = guestUpcomingItem();
+    if(up) return ev(up.eventId);
+    /* VENUE AND TIMELINE DATA RESET milestone (2026-08-21): with zero
+       timeline items, guestUpcomingItem() is always null, so this used to
+       fall straight to the LAST event on the books any time nothing was
+       currently live — wrong mid-week, before anything has started, or
+       between two events. Event-level start time is a real, non-fabricated
+       fact, so it's the correct fallback for "what's next" once the
+       timeline-item-based answer isn't available. */
+    const upcomingEvent = events.find(e=>new Date(e.startTime).getTime() > now().getTime());
+    if(upcomingEvent) return upcomingEvent;
+    return events[events.length-1];
+  }
+  if(phase === "planning") return events[0];
+  return events[events.length-1];
+}
+
+/* VIDHI TWO-SIDE EXPERIENCE (guest): mirrors the ops-side computation in
+   team-app.js exactly — same side-detection rule (title starts with
+   "Partner One"/"Partner Two"), same derived merge point (first item after the last
+   side-tagged item, never a hardcoded title) — but run over this app's
+   own already-guest-filtered item list (guestData ships only
+   audience:"public" timeline items to begin with), so a guest never sees
+   anything beyond what Show-to-Guest already allows. event_vidhi is the
+   one fixed id, the same way this file already keys specific behavior off
+   specific event ids elsewhere (e.g. guestPhotoLinkForEvent). */
+const VIDHI_EVENT_ID = "event_vidhi";
+/* MEHNDI HAS NO LENSE LINK YET: mirrors team-app.js's own MEHNDI_EVENT_ID
+   override exactly — photo sharing starts at Vidhi, so the four other
+   photo events (Vidhi/Pithi, Sangeet, Wedding Ceremony, Reception) keep
+   the working TEST Lense link while Mehndi always renders a disabled
+   state instead, event-id-driven rather than a hardcoded time check. */
+const MEHNDI_EVENT_ID = "event_mehndi";
+function vidhiSideOf(item){
+  const title = (item && item.title || "").trim();
+  if(/^partner one/i.test(title)) return "partnerOne";
+  if(/^partner two/i.test(title)) return "partnerTwo";
+  return null;
+}
+function vidhiMergeItem(sortedItems){
+  let lastSideTime = null;
+  sortedItems.forEach(it=>{
+    if(!vidhiSideOf(it)) return;
+    const tm = new Date(it.time).getTime();
+    if(lastSideTime === null || tm > lastSideTime) lastSideTime = tm;
+  });
+  if(lastSideTime === null) return null;
+  return sortedItems.find(it => new Date(it.time).getTime() > lastSideTime) || null;
+}
+function vidhiSideStatus(sortedItems, side, mergeItem, nowMs){
+  const sideItems = sortedItems.filter(it=>vidhiSideOf(it)===side);
+  let current = null, next = null;
+  for(const it of sideItems){
+    const tm = new Date(it.time).getTime();
+    if(tm <= nowMs) current = it; else { next = it; break; }
+  }
+  if(!next && mergeItem) next = mergeItem;
+  return { current, next };
+}
+function vidhiComputeTracks(items){
+  const sorted = items.slice().sort((a,b)=> new Date(a.time) - new Date(b.time));
+  const merge = vidhiMergeItem(sorted);
+  if(!merge) return null;
+  const nowMs = now().getTime();
+  const isDual = nowMs < new Date(merge.time).getTime();
+  const partnerOne = vidhiSideStatus(sorted, "partnerOne", merge, nowMs);
+  const partnerTwo = vidhiSideStatus(sorted, "partnerTwo", merge, nowMs);
+  if(!partnerOne.current && !partnerOne.next && !partnerTwo.current && !partnerTwo.next) return null;
+  return { sorted, merge, isDual, partnerOne, partnerTwo };
+}
+/* GUEST HOME HIERARCHY REFINEMENT (2026-08-30): the dual-track home hero
+   used to stack four loud, separately-competing blocks — an oversized
+   oversized serif slogan naming no real activity, two full bordered/shadowed
+   side cards, and a standalone convergence sentence floating below them.
+   Screenshots showed this reading as scattered rather than as one live
+   moment. Rebuilt as a single eye path: eyebrow -> concise event heading
+   (the actual event name, "Vidhi / Pithi", not a slogan) -> one bordered
+   .guest-vidhi-module containing both sides as compact columns (a vertical
+   divider on desktop, stacked rows on mobile via .guest-vidhi-columns) ->
+   the Lunch/merge convergence folded in as a subtle footer bridge inside
+   that same module, instead of a separate sentence. Activity titles here
+   drop their repeated "Partner One's Side —"/"Partner Two's Side —" prefix (see
+   vidhiStripSidePrefix) since the column header already names the side;
+   NOW vs NEXT is a small tag rather than another line of text. Scoped to
+   new classes (.guest-vidhi-module/-columns/-column/-now/-next/-tag/-merge)
+   used ONLY here. All values are still the same data-derived
+   tracks.partnerOne/partnerTwo/merge from vidhiComputeTracks — only the rendering
+   changed. (The Schedule-detail page's OWN two-side rendering, once a
+   separate summary card here, was later redesigned in the GUEST EVENT-
+   DETAIL HIERARCHY REFINEMENT pass below — see vidhiGuestDetailSectionsHtml.) */
+function vidhiStripSidePrefix(title){
+  return String(title||"").replace(/^(?:Partner One|Partner Two)['’]s Side\s*[\u2014-]\s*/i, "");
+}
+function vidhiGuestModuleColumnHtml(label, side){
+  const nowHtml = side.current
+    ? `<span class="guest-vidhi-tag is-now">Now</span>${esc(vidhiStripSidePrefix(displayTitle(side.current)))}`
+    : `<span class="guest-vidhi-now-pending">Not started yet</span>`;
+  const nextHtml = side.next
+    ? `<div class="guest-vidhi-next"><span class="guest-vidhi-tag is-next">Next</span>${esc(vidhiStripSidePrefix(displayTitle(side.next)))} ${countdownLabel(side.next.time)}</div>`
+    : "";
+  return `
+    <div class="guest-vidhi-column">
+      <div class="guest-vidhi-column-label">${esc(label)}</div>
+      <div class="guest-vidhi-now">${nowHtml}</div>
+      ${nextHtml}
+    </div>
+  `;
+}
+/* Home hero variant while Vidhi is in its dual-track window. */
+function vidhiDualGuestHeroHtml(event, tracks){
+  return `
+    <section class="guest-hero is-vidhi">
+      <div class="guest-hero-eyebrow is-live">Happening Now</div>
+      <h1 class="guest-hero-title">${esc(event.title)}</h1>
+      <div class="guest-vidhi-module">
+        <div class="guest-vidhi-module-label">Two Sides, Running in Parallel</div>
+        <div class="guest-vidhi-columns">
+          ${vidhiGuestModuleColumnHtml("Partner One's Side", tracks.partnerOne)}
+          ${vidhiGuestModuleColumnHtml("Partner Two's Side", tracks.partnerTwo)}
+        </div>
+        <div class="guest-vidhi-merge">Together at ${esc(vidhiStripSidePrefix(displayTitle(tracks.merge)))} ${countdownLabel(tracks.merge.time)}</div>
+      </div>
+    </section>
+  `;
+}
+/* GUEST EVENT-DETAIL HIERARCHY REFINEMENT (2026-08-30): the Vidhi
+   Schedule-detail page used to render a "status card" (current/next per
+   side, or after the merge a lone "Together" sentence) ABOVE the exact
+   same information repeated a second time in the full flat moments list
+   below it — an unrelated, equal-weight card duplicating its own page,
+   and after the merge a status card floating above a still-fully-flat,
+   still-interleaved run sheet. Replaced with one structural pass over
+   the event's own real, already guest-filtered items — no separate
+   status card, no duplication:
+     - any shared item before the split (e.g. Breakfast Service, which
+       carries no "Partner One's/Partner Two's Side —" prefix) in its own compact
+       section, once;
+     - Partner One's and Partner Two's pre-merge items as two balanced, internally
+       chronological tracks (desktop columns / stacked mobile rows via
+       .guest-vidhi-detail-tracks), titles stripped of their repeated
+       side-name prefix via vidhiStripSidePrefix — the column header
+       already names the side;
+     - the merge item itself (Lunch Service) as one compact bridge line,
+       not a fourth full moment row;
+     - every item after the merge, once, as an ordinary shared timeline
+       (the same .guest-schedule-panel/.guest-moments/renderGuestMoment
+       markup every other event's detail page uses — post-merge Vidhi is
+       exactly as "together" as any other event).
+   Partitioning reads off vidhiComputeTracks()'s own already-derived
+   `sorted` (real timeline order) and `merge` (the real, data-derived
+   convergence point) — it does not re-detect sides or re-sort anything
+   itself, so it can never disagree with the home hero about what merged
+   when. */
+function vidhiScheduleSections(tracks){
+  const sorted = tracks.sorted;
+  const mergeIndex = sorted.findIndex(it => it.id === tracks.merge.id);
+  const pre = mergeIndex >= 0 ? sorted.slice(0, mergeIndex) : sorted;
+  const together = mergeIndex >= 0 ? sorted.slice(mergeIndex + 1) : [];
+  return {
+    shared: pre.filter(it => !vidhiSideOf(it)),
+    partnerOne: pre.filter(it => vidhiSideOf(it) === "partnerOne"),
+    partnerTwo: pre.filter(it => vidhiSideOf(it) === "partnerTwo"),
+    merge: tracks.merge,
+    together,
+  };
+}
+function isGuestMomentCurrent(item){
+  const t = now().getTime();
+  return t >= new Date(item.time).getTime() && t < spanEndOf(item);
+}
+function vidhiGuestDetailTrackRowHtml(item){
+  const current = isGuestMomentCurrent(item);
+  return `
+    <div class="guest-vidhi-track-row${current ? ' is-current' : ''}" data-clock-moment="${esc(item.id)}">
+      <div class="guest-vidhi-track-time">${esc(displayTimeLabel(item))}</div>
+      <div class="guest-vidhi-track-title">${esc(vidhiStripSidePrefix(displayTitle(item)))}</div>
+    </div>
+  `;
+}
+function vidhiGuestDetailTrackHtml(label, items){
+  return `
+    <div class="guest-vidhi-track">
+      <div class="guest-vidhi-track-label">${esc(label)}</div>
+      ${items.length ? items.map(vidhiGuestDetailTrackRowHtml).join("") : `<p class="guest-vidhi-track-empty">Nothing scheduled yet.</p>`}
+    </div>
+  `;
+}
+function vidhiGuestDetailSectionsHtml(tracks){
+  const s = vidhiScheduleSections(tracks);
+  const sharedHtml = s.shared.length ? `
+    <div class="guest-vidhi-detail-label">Starting Together</div>
+    <div class="guest-schedule-panel guest-vidhi-shared-panel"><div class="guest-moments">${s.shared.map(renderGuestMoment).join("")}</div></div>
+  ` : "";
+  const togetherHtml = s.together.length ? `
+    <div class="guest-vidhi-detail-label">Together</div>
+    <div class="guest-schedule-panel"><div class="guest-moments">${s.together.map(renderGuestMoment).join("")}</div></div>
+  ` : "";
+  return `
+    ${sharedHtml}
+    <div class="guest-vidhi-detail-label">Two Sides, Running in Parallel</div>
+    <div class="guest-schedule-panel guest-vidhi-tracks-panel">
+      <div class="guest-vidhi-detail-tracks">
+        ${vidhiGuestDetailTrackHtml("Partner One's Side", s.partnerOne)}
+        ${vidhiGuestDetailTrackHtml("Partner Two's Side", s.partnerTwo)}
+      </div>
+      <div class="guest-vidhi-bridge">
+        <span class="guest-vidhi-bridge-time">${esc(fmtTime(s.merge.time))}</span>
+        <span class="guest-vidhi-bridge-label">${esc(displayTitle(s.merge))} — both sides come together</span>
+      </div>
+    </div>
+    ${togetherHtml}
+  `;
+}
+
+function guestHeroHtml(){
+  const phase = getPhase();
+  const coupleNames = data.wedding.coupleNames;
+
+  if(phase === "planning"){
+    const bounds = weddingWeekBounds();
+    const days = daysUntil(bounds.start);
+    return `
+      <section class="guest-hero">
+        <div class="guest-hero-eyebrow">We're Getting Married</div>
+        <h1 class="guest-hero-title">${esc(coupleNames)}</h1>
+        <div class="guest-hero-date">${fmtDate(bounds.start+"T00:00:00",{month:'long',day:'numeric'})} – ${fmtDate(bounds.end+"T00:00:00",{month:'long',day:'numeric',year:'numeric'})}</div>
+        <div class="guest-countdown">${days} Day${days===1?'':'s'} To Go</div>
+      </section>
+    `;
+  }
+
+  if(phase === "week"){
+    const cur = guestCurrentItem();
+    const next = guestUpcomingItem();
+    const today = guestEvents().filter(e=>isSameDay(new Date(e.startTime), now()));
+    /* VENUE AND TIMELINE DATA RESET milestone (2026-08-21): guestUpcomingItem()
+       is timeline-item-based and always null with zero items, which used to
+       make every "no next item" case claim "The last moment of the day" —
+       false the moment there's a second event still to come. Falls back to
+       the next real EVENT's own start time (never fabricated, never derived
+       from a deleted timeline) before ever making that claim; kept alongside
+       the item-based `next` so a future authored, guest-visible timeline item
+       still takes priority the moment one exists again. */
+    const nextEventFallback = guestEvents().find(e=>new Date(e.startTime).getTime() > now().getTime());
+    const nextLineHtml = next
+      ? `<div class="guest-hero-next">Next: ${esc(displayTitle(next))} ${countdownLabel(next.time)}</div>`
+      : (nextEventFallback
+        ? `<div class="guest-hero-next">Next: ${esc(nextEventFallback.title)} ${countdownLabel(nextEventFallback.startTime)}</div>`
+        : `<div class="guest-hero-next">The last moment of the day.</div>`);
+    if(cur){
+      const e = ev(cur.eventId);
+      const venue = venueOf(e?.venueId);
+      /* VIDHI TWO-SIDE EXPERIENCE: while the live moment belongs to the
+         Vidhi event and its two sides haven't converged yet, replace the
+         normal single-item hero with the dual-track view entirely. Once
+         merged, fall through to the normal hero below with a "Together"
+         tag so it reads as the same live moment both sides now share. */
+      let vidhiTogetherSuffix = "";
+      if(e && e.id === VIDHI_EVENT_ID){
+        const tracks = vidhiComputeTracks(guestTimelineForEvent(e.id));
+        if(tracks){
+          if(tracks.isDual) return vidhiDualGuestHeroHtml(e, tracks);
+          vidhiTogetherSuffix = " · Together";
+        }
+      }
+      return `
+        <section class="guest-hero">
+          <div class="guest-hero-eyebrow is-live">Happening Now${vidhiTogetherSuffix}</div>
+          <h1 class="guest-hero-title">${esc(displayTitle(cur))}</h1>
+          <div class="guest-hero-date">${esc(e?.title||"")}${venue ? " · " + esc(venue.name) : ""}</div>
+          ${nextLineHtml}
+        </section>
+      `;
+    }
+    const liveEvent = guestLiveEvent();
+    if(liveEvent){
+      const venue = venueOf(liveEvent.venueId);
+      return `
+        <section class="guest-hero">
+          <div class="guest-hero-eyebrow is-live">Happening Now</div>
+          <h1 class="guest-hero-title">${esc(liveEvent.title)}</h1>
+          <div class="guest-hero-date">${venue ? esc(venue.name) : ""}</div>
+          ${nextLineHtml}
+        </section>
+      `;
+    }
+    return `
+      <section class="guest-hero">
+        <div class="guest-hero-eyebrow">Welcome</div>
+        <h1 class="guest-hero-title">${esc(coupleNames)}</h1>
+        <div class="guest-hero-date">${fmtDate(now(),{weekday:'long',month:'long',day:'numeric'})}</div>
+        ${today.length ? `<div class="guest-hero-next">Today: ${esc(today.map(e=>e.title).join(" & "))}</div>` : `<div class="guest-hero-next">A quiet day between celebrations.</div>`}
+        ${next ? `<div class="guest-hero-next">Next: ${esc(displayTitle(next))} ${countdownLabel(next.time)}</div>` : (nextEventFallback ? `<div class="guest-hero-next">Next: ${esc(nextEventFallback.title)} ${countdownLabel(nextEventFallback.startTime)}</div>` : "")}
+      </section>
+    `;
+  }
+
+  return `
+    <section class="guest-hero">
+      <div class="guest-hero-eyebrow is-archive">With Love</div>
+      <h1 class="guest-hero-title">Thank You</h1>
+      <p class="guest-hero-sub">Thank you for celebrating with ${esc(coupleNames)}. It meant the world to have you there.</p>
+    </section>
+  `;
+}
+function minutesUntil(iso){ return Math.round((new Date(iso).getTime() - now().getTime()) / 60000); }
+function countdownLabel(iso){
+  const m = minutesUntil(iso);
+  if(m <= 0) return "";
+  if(m < 60) return `in ${m} min`;
+  const h = Math.floor(m/60), mm = m % 60;
+  return mm ? `in ${h}h ${mm}m` : `in ${h}h`;
+}
+
+function guestScheduleActionLabel(){
+  const phase = getPhase();
+  if(phase === "post") return "Relive the Celebration";
+  return "View Your Schedule";
+}
+
+function guestHashtagMeaningHtml(){
+  return `<div class="guest-hashtag-meaning">
+    <h3>Behind our hashtag</h3>
+    <dl>
+      <div><dt>A</dt><dd>Avery</dd></div>
+      <div><dt>J</dt><dd>Jordan</dd></div>
+      <div><dt>Ever</dt><dd>One shared journey</dd></div>
+      <div><dt>27</dt><dd>2027 demo</dd></div>
+    </dl>
+  </div>`;
+}
+
+function guestActionsPairHtml(){
+  const hashtag = data.wedding.hashtag;
+  const scheduleCard = `
+    <button class="guest-action-card guest-schedule-action" data-guest-goto="timeline" type="button">
+      <div class="guest-action-icon-badge">${ICONS.calendar}</div>
+      <div class="guest-schedule-action-copy">
+      <div class="guest-action-title">${guestScheduleActionLabel()}</div>
+      <div class="guest-action-sub">See the full lineup</div>
+      </div>
+      <span class="guest-schedule-action-arrow" aria-hidden="true">↗</span>
+    </button>
+  `;
+  const photoCard = hashtag ? `
+    <div class="guest-hashtag-card">
+    <button class="guest-action-card is-photo" data-copy-hashtag type="button">
+      <div class="guest-action-icon-badge">${ICONS.camera}</div>
+      <div class="guest-action-title">Share Your Photos</div>
+      <div class="guest-action-sub">Tap to copy <span data-hashtag-text>${esc(hashtag)}</span></div>
+    </button>
+    ${guestHashtagMeaningHtml()}
+    </div>
+  ` : "";
+  return `
+    <section class="guest-actions-pair">
+      ${photoCard}
+      ${scheduleCard}
+    </section>
+  `;
+}
+
+function guestDetailRowsHtml(event){
+  if(!event){
+    return `<p class="guest-empty">Details will be posted as the date gets closer.</p>`;
+  }
+  const venue = venueOf(event.venueId);
+  const directions = venueHasUsableAddress(venue);
+  return `
+    <div class="guest-details-grid">
+      <div class="guest-detail">
+        <div class="guest-detail-icon">${ICONS.mapPin}</div>
+        <div class="guest-detail-label">Venue</div>
+        <div class="guest-detail-value">${venue ? esc(venue.name) : "To be announced"}</div>
+        ${venue && venue.address ? `<div class="guest-detail-sub">${esc(venue.address)}</div>` : ""}
+      </div>
+    </div>
+    ${directions ? `<a class="guest-btn guest-btn-outline" href="https://maps.google.com/?q=${encodeURIComponent(venue.address)}" target="_blank" rel="noopener">${ICONS.mapPin} Get Directions</a>` : ""}
+  `;
+}
+
+function guestTransportationHtml(event){
+  const list = guestFacingTransportation(event ? event.id : null);
+  if(!list.length) return "";
+  return `
+    <section class="guest-section">
+      <div class="guest-eyebrow">Getting There</div>
+      <h2 class="guest-heading-sm">Shuttle Service</h2>
+      <div class="guest-transport-list">
+        ${list.map(t=>`
+          <div class="guest-transport-card">
+            <div class="guest-transport-route">${esc(transportationLabel(t))}</div>
+            <div class="guest-transport-time">Departs ${fmtTime(t.departureTime)}${t.arrivalTime ? " · arrives ~" + fmtTime(t.arrivalTime) : ""}</div>
+            ${t.guestInstructions ? `<p class="guest-transport-note">${esc(t.guestInstructions)}</p>` : ""}
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function wireGuestGoto(container){
+  container.querySelectorAll("[data-guest-goto]").forEach(b=>b.addEventListener("click", ()=>{
+    const target = b.getAttribute("data-guest-goto");
+    if(target === "timeline") state.guestScheduleEventId = null;
+    state.guestView = target;
+    renderShell(); renderActiveView();
+    window.scrollTo(0, 0);
+  }));
+}
+
+async function copyHashtag(triggerEl){
+  const raw = data.wedding.hashtag;
+  if(!raw) return;
+  const text = raw.startsWith("#") ? raw : "#"+raw;
+
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      toast(`Copied ${text} — paste it when you share your photos`);
+      return;
+    }
+  }catch(e){ /* fall through to the legacy fallback below */ }
+
+  const hashtagEl = triggerEl ? triggerEl.querySelector("[data-hashtag-text]") : null;
+  let selected = false;
+  if(hashtagEl && window.getSelection){
+    try{
+      const range = document.createRange();
+      range.selectNodeContents(hashtagEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      selected = true;
+    }catch(e){ selected = false; }
+  }
+  let legacyCopied = false;
+  if(selected){
+    try{ legacyCopied = !!(document.execCommand && document.execCommand("copy")); }
+    catch(e){ legacyCopied = false; }
+  }
+
+  if(legacyCopied){
+    toast(`Copied ${text} — paste it when you share your photos`);
+  } else if(selected){
+    toast(`${text} selected — copy it to share your photos`);
+  } else {
+    toast(`Couldn't copy automatically — the hashtag is ${text}`);
+  }
+}
+function wireGuestPhotoCopyButtons(container){
+  container.querySelectorAll("[data-copy-hashtag]").forEach(b=>b.addEventListener("click", ()=>copyHashtag(b)));
+}
+
+function guestBrochureHtml(){
+  // The ceremony takes place in New Jersey (EDT), regardless of the
+  // guest's device timezone. Show the card only during its public window.
+  const time = now().getTime();
+  if(time < Date.parse("2027-06-12T14:00:00-04:00") || time >= Date.parse("2027-06-12T18:00:00-04:00")) return "";
+  return `<section class="guest-section brochure-section"><a class="brochure-card" href="assets/wedding-brochure.pdf" target="_blank" rel="noopener" aria-label="View ceremony brochure PDF in a new tab">
+    <span class="brochure-mark" aria-hidden="true">✦</span><span><span class="brochure-kicker">September 5 · Wedding Ceremony</span><strong>Our Wedding Brochure</strong><span>Follow the rituals, get to know us & enjoy a little fun.</span><small>View brochure · PDF · opens in a new tab ↗</small></span></a></section>`;
+}
+
+function renderGuestHome(){
+  applyGuestTheme();
+  const el = document.getElementById("guest-view-home");
+  const relevant = guestRelevantEvent();
+  el.innerHTML = `
+    ${guestPreviewLabelHtml()}
+    <div id="guest-clock-hero">${guestHeroHtml()}</div>
+    <div id="guest-clock-tools">${guestLiveSeatingCtaHtml()}${guestLivePhotoCtaHtml()}</div>
+    ${guestActionsPairHtml()}
+    <div id="guest-clock-brochure-home">${guestBrochureHtml()}</div>
+    <section class="guest-section" id="guest-clock-details">
+      <div class="guest-eyebrow">The Details</div>
+      <h2 class="guest-heading-sm">${relevant ? esc(relevant.title) : "The Celebration"}</h2>
+      ${guestDetailRowsHtml(relevant)}
+    </section>
+    <div id="guest-clock-transport">${guestTransportationHtml(relevant)}</div>
+  `;
+  wireGuestGoto(el);
+  wireGuestPhotoCopyButtons(el);
+}
+
+/* GUEST EXPANDED PROGRAM correction (2026-08-27): guestSubMoments, when
+   present, is a small hand-authored, name-free, order-only list (see
+   timeline-guest-subsequences.json and build/generate_guest_data.js) —
+   never the item's private internal notes, which this build never even
+   receives. Rendered as a native <details> disclosure so it needs no
+   click-handler wiring and stays keyboard/mobile accessible for free; no
+   individual times are shown for these sub-moments because none were
+   individually authored — only their order is a known fact. */
+function guestSubMomentsHtml(item){
+  if(!Array.isArray(item.guestSubMoments) || !item.guestSubMoments.length) return "";
+  return `
+    <details class="guest-moment-detail">
+      <summary>See the order of events</summary>
+      <ol class="guest-moment-detail-list">
+        ${item.guestSubMoments.map(m=>`<li>${esc(m)}</li>`).join("")}
+      </ol>
+    </details>
+  `;
+}
+function renderGuestMoment(item){
+  /* Active/current-row emphasis (GUEST EVENT-DETAIL HIERARCHY REFINEMENT,
+     2026-08-30): purely additive — an extra class when `now()` falls
+     inside this item's own span (see spanEndOf), styled in
+     guest-skeleton.html. Applies on every event's detail page, not just
+     Vidhi's tracks (see vidhiGuestDetailTrackRowHtml for the track-row
+     equivalent), and is a no-op outside preview/live time the same way
+     the rest of the guest app already handles now(). */
+  const current = isGuestMomentCurrent(item);
+  return `
+    <div class="guest-moment${current ? ' is-current' : ''}" data-clock-moment="${esc(item.id)}">
+      <div class="guest-moment-time">${esc(displayTimeLabel(item))}</div>
+      <div class="guest-moment-title">${esc(displayTitle(item))}</div>
+      ${guestSubMomentsHtml(item)}
+    </div>
+  `;
+}
+/* VENUE AND TIMELINE DATA RESET milestone (2026-08-21): used to return ""
+   (hiding the whole event, header included) whenever it had zero timeline
+   items — with data.timelineItems now empty by design, that hid every
+   event's schedule block permanently. Requirement 5 is explicit: events
+   stay visible, and an empty moment list reads "Schedule details coming
+   soon", not a blank page. The event header (title/date/venue) is always
+   real event data, never derived from the deleted timeline. */
+function renderGuestEventBlock(e){
+  const items = guestTimelineForEvent(e.id);
+  const venue = venueOf(e.venueId);
+  const headHtml = `
+    <div class="guest-event-head">
+      <div class="guest-event-title">${esc(e.title)}</div>
+      <div class="guest-event-date">${esc(fmtDate(e.startTime,{weekday:'long',month:'long',day:'numeric'}))}</div>
+      <div class="guest-event-meta">${fmtTime(e.startTime)} – ${fmtTime(e.endTime)} · ${venue ? esc(venue.name) : "Venue TBD"}</div>
+    </div>
+  `;
+  /* Vidhi gets the special integrated two-sides structure above (see
+     vidhiGuestDetailSectionsHtml); every other event — and Vidhi itself,
+     as a defensive fallback, on the rare chance its data ever stops
+     shaping into a mergeable pair of tracks — gets the ordinary bounded
+     schedule panel every other event's detail page already uses, so the
+     ONE compact header + ONE bounded schedule panel shape (requested for
+     every event detail page) always holds even if that fallback ever
+     fires. */
+  const vidhiTracks = e.id === VIDHI_EVENT_ID ? vidhiComputeTracks(items) : null;
+  const bodyHtml = vidhiTracks
+    ? vidhiGuestDetailSectionsHtml(vidhiTracks)
+    : (items.length
+        ? `<div class="guest-schedule-panel"><div class="guest-moments">${items.map(renderGuestMoment).join("")}</div></div>`
+        : `<p class="guest-empty">Schedule details coming soon.</p>`);
+  return `
+    <div class="guest-event">
+      ${headHtml}
+      ${bodyHtml}
+    </div>
+  `;
+}
+
+/* VENUE AND TIMELINE DATA RESET milestone (2026-08-21): "0 moments" read
+   as a broken/fabricated count once every event has zero timeline items
+   by design — replaced with the same "Schedule details coming soon"
+   wording used in renderGuestEventBlock so the two surfaces agree. */
+function guestScheduleEventCardHtml(e, isLive){
+  const items = guestTimelineForEvent(e.id);
+  const venue = venueOf(e.venueId);
+  return `
+    <button class="guest-event-pick-card ${isLive?'is-live':''}" data-event-palette="${e.id}" data-guest-schedule-open="${e.id}" type="button">
+      ${isLive ? `<span class="guest-live-pill"><span class="guest-live-dot"></span>Live Now</span>` : ""}
+      <div class="guest-event-pick-title">${esc(e.title)}</div>
+      <div class="guest-event-pick-sub">${fmtTime(e.startTime)} – ${fmtTime(e.endTime)} · ${venue ? esc(venue.name) : "Venue TBD"}</div>
+      <div class="guest-event-pick-count">${items.length ? `${items.length} moment${items.length===1?'':'s'}` : "Schedule details coming soon"}</div>
+    </button>
+  `;
+}
+
+function renderGuestSchedulePicker(el){
+  const days = guestDayGroups();
+  const phase = getPhase();
+  const liveEventId = phase === "week" ? guestLiveEventId() : null;
+  el.innerHTML = `
+    ${guestPreviewLabelHtml()}
+    <section class="guest-section guest-section-top">
+      <div class="guest-eyebrow">The Schedule</div>
+      <h1 class="guest-heading">Our Celebration</h1>
+      ${days.length
+        ? days.map(day => `
+            <div class="guest-day">
+              <div class="guest-day-label">${esc(day.shortLabel)}</div>
+              <div class="guest-events-grid">
+                ${day.events.map(e=>guestScheduleEventCardHtml(e, liveEventId===e.id)).join("")}
+              </div>
+            </div>
+          `).join("")
+        : `<p class="guest-empty">The schedule will be posted soon — check back closer to the date.</p>`}
+    </section>
+    ${guestSchedulePhotoNudgeHtml()}
+  `;
+  el.querySelectorAll("[data-guest-schedule-open]").forEach(b=>b.addEventListener("click", ()=>{
+    state.guestScheduleEventId = b.getAttribute("data-guest-schedule-open");
+    renderGuestTimeline();
+    window.scrollTo(0, 0);
+  }));
+  wireGuestGoto(el);
+  wireGuestPhotoCopyButtons(el);
+}
+
+function guestEventDirectoryHtml(eventId){
+  const wedding = eventId === "event_wedding";
+  if(!wedding && eventId !== "event_reception") return "";
+  const records = wedding ? (data.photoGroups || []) : (data.seatingTables || []);
+  const title = wedding ? "Wedding Photo Groups" : "Reception Seating Chart";
+  return `<section class="guest-section" aria-label="${title}">
+    <h2 class="guest-heading">${title}</h2>
+    <label for="guest-directory-search">${wedding ? "Find your photo group" : "Find your table"}</label>
+    <input id="guest-directory-search" class="guest-directory-search" type="search" placeholder="Search by name or ${wedding ? "group" : "table"}" autocomplete="off">
+    <div class="guest-directory-list">${records.map(r => {
+      const label = wedding ? r.title : `Table ${r.number}`;
+      const groupParts = wedding ? /^(Group\s+\d+)\s+—\s+(.+)$/.exec(label) : null;
+      const summaryLabel = groupParts ? groupParts[1] : label;
+      const familyLabel = groupParts ? `<p class="guest-group-family"><strong>${esc(groupParts[2])}</strong></p>` : "";
+      const names = wedding ? r.names : r.guests;
+      return `<details class="guest-directory-record" data-directory-text="${esc([label,...names].join(" ").toLowerCase())}"><summary>${esc(summaryLabel)} · ${names.length} guests</summary>${familyLabel}<ul>${names.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></details>`;
+    }).join("")}</div>
+    <p data-directory-empty ${records.length ? "hidden" : ""}>${records.length ? "No matching names, groups or tables." : "Details coming soon."}</p>
+  </section>`;
+}
+function wireGuestDirectory(el){
+  const input = el.querySelector("#guest-directory-search");
+  if(!input) return;
+  input.addEventListener("input", () => {
+    const query = input.value.trim().toLowerCase();
+    let visible = 0;
+    el.querySelectorAll("[data-directory-text]").forEach(row => {
+      row.hidden = !row.getAttribute("data-directory-text").includes(query);
+      row.open = !!query && !row.hidden;
+      if(!row.hidden) visible++;
+    });
+    el.querySelector("[data-directory-empty]").hidden = visible > 0;
+  });
+}
+function renderGuestScheduleForEvent(el, eventObj){
+  el.innerHTML = `
+    ${guestPreviewLabelHtml()}
+    <section class="guest-section guest-section-top guest-schedule-detail-top">
+      <button class="guest-schedule-back" data-guest-schedule-back type="button">${ICONS.chevron} Back to All Events</button>
+      <div class="guest-eyebrow">The Schedule</div>
+      ${renderGuestEventBlock(eventObj)}
+    </section>
+    ${eventObj.id === "event_wedding" ? `<div id="guest-clock-brochure-event">${guestBrochureHtml()}</div>` : ""}
+    ${guestEventDirectoryHtml(eventObj.id)}
+    <div id="guest-clock-event-camera">${guestLivePhotoCtaHtml(eventObj.id)}</div>
+    ${guestSchedulePhotoNudgeHtml()}
+  `;
+  wireGuestDirectory(el);
+  el.querySelector("[data-guest-schedule-back]").addEventListener("click", ()=>{
+    state.guestScheduleEventId = null;
+    renderGuestTimeline();
+    window.scrollTo(0, 0);
+  });
+  wireGuestGoto(el);
+  wireGuestPhotoCopyButtons(el);
+}
+
+function guestSchedulePhotoNudgeHtml(){
+  const hashtag = data.wedding.hashtag;
+  if(!hashtag) return "";
+  return `
+    <section class="guest-schedule-photo-nudge-wrap">
+      <div class="guest-hashtag-card">
+      <button class="guest-schedule-photo-nudge" data-copy-hashtag type="button">
+        <span class="guest-schedule-photo-nudge-row">
+          <span class="guest-schedule-photo-nudge-icon">${ICONS.camera}</span>
+          <span class="guest-schedule-photo-nudge-label">Share Your Photos</span>
+        </span>
+        <span class="guest-schedule-photo-nudge-tag-row">
+          <span class="guest-schedule-photo-nudge-tap">Tap to copy</span>
+          <span class="guest-schedule-photo-nudge-hashtag" data-hashtag-text>${esc(hashtag)}</span>
+        </span>
+      </button>
+      ${guestHashtagMeaningHtml()}
+      </div>
+    </section>
+  `;
+}
+
+function renderGuestTimeline(){
+  applyGuestTheme();
+  const el = document.getElementById("guest-view-timeline");
+  const eventObj = state.guestScheduleEventId ? ev(state.guestScheduleEventId) : null;
+  if(!eventObj){ state.guestScheduleEventId = null; renderGuestSchedulePicker(el); return; }
+  renderGuestScheduleForEvent(el, eventObj);
+}
+
+/* ---------------------------- Entry points ---------------------------- */
+function renderShell(){ renderGuestShell(); }
+function renderActiveView(){ renderGuestActiveView(); }
+
+function isSeatingRoute(){
+  return /^\/seating\/?$/.test(location.pathname);
+}
+function seatingKey(value){
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function seatingDistance(a,b){
+  const row = Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    let prev=row[0]; row[0]=i;
+    for(let j=1;j<=b.length;j++){
+      const old=row[j];
+      row[j]=Math.min(row[j]+1,row[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));
+      prev=old;
+    }
+  }
+  return row[b.length];
+}
+function seatingMatches(query){
+  const completedToken=/\s$/.test(String(query || ""));
+  const q=seatingKey(query);
+  if(q.length<2) return [];
+  const qTokens=q.split(" ");
+  const matches=[];
+  (data.seatingTables || []).forEach(table=>table.guests.forEach(name=>{
+    const key=seatingKey(name), tokens=key.split(" ");
+    const contains=qTokens.every(part=>tokens.some(token=>completedToken ? token===part : token.includes(part) || (token.length>=3 && part.includes(token))));
+    const fuzzy=!completedToken && q.length>=4 && (seatingDistance(q,key)<=Math.max(1,Math.floor(q.length/5)) || qTokens.every(part=>tokens.some(token=>seatingDistance(part,token)<=1)));
+    if(contains || fuzzy){
+      const distance=seatingDistance(q,key);
+      const score=key===q?0:key.startsWith(q)?1:contains?2+(Math.abs(tokens.length-qTokens.length)/10)+(distance/1000):3+(distance/100);
+      matches.push({name,number:table.number,score});
+    }
+  }));
+  return matches.sort((a,b)=>a.score-b.score || a.name.localeCompare(b.name));
+}
+function renderSeatingPage(){
+  document.title="Find Your Table · Avery & Jordan Demo";
+  const tables=data.seatingTables || [];
+  document.getElementById("app").innerHTML=`<main class="seating-page"><div class="seating-shell">
+    <header class="seating-masthead"><div class="seating-monogram">${coupleMonogram()}</div><div class="seating-kicker">Reception Seating</div><h1 class="seating-title">Find Your Table</h1><p class="seating-intro">Search your name below and we’ll point you to your place for the celebration.</p></header>
+    <section class="seating-search-panel" aria-label="Find your reception table"><label class="seating-search-label" for="seating-name">Guest name</label><div class="seating-search-wrap"><input class="seating-search" id="seating-name" type="search" placeholder="Start typing your name…" autocomplete="name" autocapitalize="words"><span class="seating-search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span></div><p class="seating-hint">First name, last name, or a close spelling works.</p><div class="seating-result" data-seating-result aria-live="polite"></div></section>
+    <section class="seating-directory" aria-labelledby="all-tables"><div class="seating-directory-head"><h2 id="all-tables">Full Seating List</h2><p>Browse every table and guest below.</p></div>${tables.map(table=>`<details class="seating-table"><summary><span>Table ${table.number}</span><span class="seating-table-count">${table.guests.length} guests</span></summary><ul>${table.guests.map(name=>`<li>${esc(name)}</li>`).join("")}</ul></details>`).join("")}</section>
+    <a class="seating-back" href="/">← Return to the wedding website</a>
+  </div></main>`;
+  const input=document.getElementById("seating-name"), result=document.querySelector("[data-seating-result]");
+  input.addEventListener("input",()=>{
+    const rawQuery=input.value;
+    if(rawQuery.trim().length<2){result.innerHTML="";return;}
+    const matches=seatingMatches(rawQuery);
+    if(!matches.length){result.innerHTML=`<div class="seating-no-result">We couldn’t find that name. Try a shorter spelling, or browse the full list below.</div>`;return;}
+    if(matches.length===1){
+      const match=matches[0];
+      result.innerHTML=`<div class="seating-result-card"><div class="seating-result-name">${esc(match.name)}</div><div class="seating-result-label">Your table</div><div class="seating-result-number">${match.number}</div><div class="seating-result-note">We can’t wait to celebrate with you.</div></div>`;
+      return;
+    }
+    result.innerHTML=`<div class="seating-multiple-heading"><strong>Multiple guests found</strong><span>Choose your full name below to find the right table.</span></div><div class="seating-match-grid">${matches.map(match=>`<div class="seating-match-card"><div class="seating-match-name">${esc(match.name)}</div><div class="seating-match-table"><span>Table</span><strong>${match.number}</strong></div></div>`).join("")}</div>`;
+  });
+  input.focus({preventScroll:true});
+}
+
+// Update only clock-sensitive content, leaving directories, searches and
+// expanded program details in place when a phone stays open during an event.
+function updateGuestClockHtml(id, html){
+  const target = document.getElementById(id);
+  if(target && target.innerHTML !== html) target.innerHTML = html;
+}
+function refreshGuestClock(){
+  if(document.hidden || isSeatingRoute()) return;
+  applyGuestTheme();
+  if(state.guestView === "home"){
+    const relevant = guestRelevantEvent();
+    updateGuestClockHtml("guest-clock-hero", guestHeroHtml());
+    updateGuestClockHtml("guest-clock-tools", guestLiveSeatingCtaHtml()+guestLivePhotoCtaHtml());
+    updateGuestClockHtml("guest-clock-brochure-home", guestBrochureHtml());
+    updateGuestClockHtml("guest-clock-details", `<div class="guest-eyebrow">The Details</div><h2 class="guest-heading-sm">${relevant ? esc(relevant.title) : "The Celebration"}</h2>${guestDetailRowsHtml(relevant)}`);
+    updateGuestClockHtml("guest-clock-transport", guestTransportationHtml(relevant));
+  } else if(state.guestScheduleEventId){
+    document.querySelectorAll("[data-clock-moment]").forEach(row=>{
+      const item = data.timelineItems.find(t=>t.id===row.getAttribute("data-clock-moment"));
+      row.classList.toggle("is-current", !!item && isGuestMomentCurrent(item));
+    });
+    updateGuestClockHtml("guest-clock-event-camera", guestLivePhotoCtaHtml(state.guestScheduleEventId));
+    if(state.guestScheduleEventId === "event_wedding") updateGuestClockHtml("guest-clock-brochure-event", guestBrochureHtml());
+  } else {
+    const liveId = getPhase() === "week" ? guestLiveEventId() : null;
+    document.querySelectorAll("[data-guest-schedule-open]").forEach(card=>{
+      const live = card.getAttribute("data-guest-schedule-open") === liveId;
+      card.classList.toggle("is-live", live);
+      const pill = card.querySelector(".guest-live-pill");
+      if(!live) pill?.remove();
+      else if(!pill) card.insertAdjacentHTML("afterbegin", '<span class="guest-live-pill"><span class="guest-live-dot"></span>Live Now</span>');
+    });
+  }
+}
+function boot(){
+  loadPersisted();
+  if(isSeatingRoute()){ renderSeatingPage(); return; }
+  renderShell();
+  renderActiveView();
+  setInterval(refreshGuestClock, 30000);
+  document.addEventListener("visibilitychange", refreshGuestClock);
+}
+document.addEventListener("DOMContentLoaded", boot);
+})();
+
+</script>
+</body>
+</html>
