@@ -17,11 +17,11 @@ const guestData = {
     { id: "venue_hotel", name: "Demo Harbor Hotel", address: "300 Example Plaza, Sample City, NY 10001", mapLinkable: false }
   ],
   events: [
-    { id: "event_mehndi", title: "Welcome Celebration", date: "2027-06-10", startTime: "2027-06-10T18:00:00-04:00", endTime: "2027-06-10T21:00:00-04:00", venueId: "venue_garden", lens: null },
-    { id: "event_vidhi", title: "Family Ceremony", date: "2027-06-11", startTime: "2027-06-11T10:00:00-04:00", endTime: "2027-06-11T12:30:00-04:00", venueId: "venue_garden", lens: null },
-    { id: "event_sangeet", title: "Music & Dance Night", date: "2027-06-11", startTime: "2027-06-11T18:30:00-04:00", endTime: "2027-06-11T22:30:00-04:00", venueId: "venue_hall", lens: null },
-    { id: "event_wedding", title: "Wedding Ceremony", date: "2027-06-12", startTime: "2027-06-12T15:00:00-04:00", endTime: "2027-06-12T17:30:00-04:00", venueId: "venue_garden", lens: null },
-    { id: "event_reception", title: "Reception", date: "2027-06-12", startTime: "2027-06-12T19:00:00-04:00", endTime: "2027-06-12T23:00:00-04:00", venueId: "venue_hall", lens: null },
+    { id: "event_mehndi", title: "Mehndi", date: "2027-06-10", startTime: "2027-06-10T18:00:00-04:00", endTime: "2027-06-10T21:00:00-04:00", venueId: "venue_garden", lens: null },
+    { id: "event_vidhi", title: "Vidhi", date: "2027-06-11", startTime: "2027-06-11T10:00:00-04:00", endTime: "2027-06-11T12:30:00-04:00", venueId: "venue_garden", lens: null },
+    { id: "event_sangeet", title: "Sangeet & Garba", date: "2027-06-11", startTime: "2027-06-11T18:30:00-04:00", endTime: "2027-06-11T22:30:00-04:00", venueId: "venue_hall", lens: null },
+    { id: "event_wedding", title: "Hindu Wedding Ceremony", date: "2027-06-12", startTime: "2027-06-12T15:00:00-04:00", endTime: "2027-06-12T17:30:00-04:00", venueId: "venue_garden", lens: null },
+    { id: "event_reception", title: "Wedding Reception", date: "2027-06-12", startTime: "2027-06-12T19:00:00-04:00", endTime: "2027-06-12T23:00:00-04:00", venueId: "venue_hall", lens: null },
     { id: "event_farewell", title: "Farewell Brunch", date: "2027-06-13", startTime: "2027-06-13T10:00:00-04:00", endTime: "2027-06-13T12:00:00-04:00", venueId: "venue_hotel", lens: null }
   ],
   timelineItems: [
