@@ -8,9 +8,20 @@ A privacy-safe portfolio implementation of a wedding guest experience deployed t
 
 ## The problem
 
-Multi-day events create operational overhead: schedule changes are repeated across chats and documents, guests struggle to find the current information, and organizers maintain public and internal details in too many places.
+The original application addressed a real operational challenge: coordinating a multi-day Indian wedding for approximately 500 guests. The largest risk was miscommunication. Schedule, venue, transportation, and event information could easily become fragmented across group chats, documents, and different family members.
 
-This project demonstrates a single, mobile-first guest experience backed by repeatable cloud infrastructure and a privacy-controlled build pipeline.
+## The solution
+
+Create a central source of truth with two intentionally separate experiences:
+
+- a mobile-first guest site containing the information attendees need; and
+- a private operations site containing the more detailed run of show used by immediate family and organizers.
+
+Separating the audiences reduced information overload while ensuring both groups worked from consistent event data.
+
+## The outcome
+
+Guests had one dependable place to find current information, organizers had a shared operational view, and the wedding events proceeded without unexpected operational surprises. The public portfolio version demonstrates the same design with synthetic data, repeatable Azure infrastructure, and a privacy-controlled build pipeline.
 
 ## What this demonstrates
 
