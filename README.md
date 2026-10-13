@@ -4,6 +4,8 @@ A privacy-safe portfolio implementation of a wedding guest experience deployed t
 
 **Live demo:** [www.sidvivah26.com](https://www.sidvivah26.com/)
 
+**SIT:** `sit.sidvivah26.com` targets the isolated nonproduction Static Web App and is promoted independently from production.
+
 ## The problem
 
 Multi-day events create operational overhead: schedule changes are repeated across chats and documents, guests struggle to find the current information, and organizers maintain public and internal details in too many places.
