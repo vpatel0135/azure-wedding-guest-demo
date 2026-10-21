@@ -57,7 +57,7 @@ The real wedding project is intentionally maintained in a separate private repos
 python3 build/build.py
 ```
 
-Open `site/index.html`. The build produces one self-contained page and runs the privacy gate before succeeding.
+Serve the `site/` directory with any static web server. The build produces an HTML shell plus same-origin CSS and JavaScript assets, then runs the privacy gate before succeeding.
 
 ## Traffic metrics
 

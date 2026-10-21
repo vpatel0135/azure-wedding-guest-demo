@@ -4,7 +4,12 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parent.parent
-FILES = [ROOT / "src" / "demo-data.js", ROOT / "site" / "index.html"]
+FILES = [
+    ROOT / "src" / "demo-data.js",
+    ROOT / "site" / "index.html",
+    ROOT / "site" / "app.js",
+    ROOT / "site" / "styles.css",
+]
 FORBIDDEN = {
     "phone number": re.compile(r"(?<!\d)(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}(?!\d)"),
     "email address": re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I),

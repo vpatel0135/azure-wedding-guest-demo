@@ -16,4 +16,4 @@ jobs:
       - name: Build synthetic public artifact
         run: python3 build/build.py
       - name: Confirm generated artifact is committed
-        run: git diff --exit-code -- site/index.html
+        run: git diff --exit-code -- site/index.html site/app.js site/styles.css

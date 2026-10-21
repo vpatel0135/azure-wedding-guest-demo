@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the synthetic, self-contained portfolio site."""
+"""Build the synthetic portfolio site with CSP-compatible static assets."""
 from pathlib import Path
 import re
 import subprocess
@@ -14,11 +14,15 @@ def main():
     banner_css = """
 .portfolio-demo-banner{position:relative;z-index:1000;padding:9px 16px;text-align:center;background:#071c35;color:#f6fbff;font:600 12px/1.4 system-ui,sans-serif;letter-spacing:.02em}
 """
-    skeleton = skeleton.replace("</style>", banner_css + "\n</style>")
+    style_match = re.search(r"^<style>\s*(.*?)\s*</style>$", skeleton, re.S | re.M)
+    if not style_match:
+        raise RuntimeError("Expected exactly one inline style block")
+    stylesheet = style_match.group(1) + "\n" + banner_css.strip() + "\n"
+    output = skeleton[:style_match.start()] + '<link rel="stylesheet" href="/styles.css">' + skeleton[style_match.end():]
     output, count = re.subn(
         r"<script>\s*</script>",
-        lambda _: "<script>\n" + data + "\n\n" + app + "\n</script>",
-        skeleton,
+        '<script src="/app.js" defer></script>',
+        output,
         count=1,
     )
     if count != 1:
@@ -26,6 +30,8 @@ def main():
     site = ROOT / "site"
     site.mkdir(exist_ok=True)
     (site / "index.html").write_text(output)
+    (site / "styles.css").write_text(stylesheet)
+    (site / "app.js").write_text(data + "\n\n" + app + "\n")
     subprocess.run(["python3", str(ROOT / "build" / "privacy_check.py")], check=True)
     print(f"Built {site / 'index.html'} ({len(output):,} bytes)")
 

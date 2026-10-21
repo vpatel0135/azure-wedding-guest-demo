@@ -7,11 +7,12 @@
 <meta name="apple-mobile-web-app-title" content="Avery &amp; Jordan Demo">
 <title>Wedding Operations Demo · Avery &amp; Jordan</title>
 <!-- ==========================================================================
-     OUR WEDDING — public Guest site shell (standalone build)
+     OUR WEDDING — public Guest site shell
 
-     This file, plus guest-data.generated.js and guest-app.js spliced into
-     the empty <script> tag below by build/build_guest.py, is the ENTIRE
-     public deployable. It shares its <style> block with the private
+     The build extracts this file's style block into a same-origin stylesheet
+     and combines the synthetic demo data with guest-app.js into a same-origin
+     application script. This allows a strict Content Security Policy without
+     unsafe-inline. It shares its <style> block with the private
      Wedding Team app's skeleton.html verbatim (CSS carries no wedding data
      — class names and colors only) so both experiences render the same
      blue visual system, but it ships NONE of the private app's markup: no

@@ -11,12 +11,10 @@
    does not exist in this file, so there is nothing here that could leak it.
 
    It reads exactly one data source: `guestData`, defined in
-   guest-data.generated.js immediately before this file in the built
-   guest/index.html. guestData is produced by build/generate_guest_data.js,
-   which walks the canonical data.js and copies out only an explicit,
-   positive allowlist of fields the functions below actually read — see
-   that script for the allowlist itself. If a function below doesn't read
-   a field, that field was never copied into guestData in the first place.
+   demo-data.js immediately before this application code in the generated
+   site/app.js bundle. The demo data is an explicit synthetic dataset. If a
+   function below doesn't read a field, that field does not need to be part
+   of the public demo data.
 
    Most of the query-layer functions here (guestEvents, guestTimeline,
    timelineQuery, rollup helpers, phase/date helpers, transportation

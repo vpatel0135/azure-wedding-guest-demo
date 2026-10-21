@@ -10,7 +10,7 @@ GitHub Actions exchanges its repository and environment identity for a short-liv
 
 ## Public/private build boundary
 
-The browser receives only `site/index.html` and `staticwebapp.config.json`. The build combines an explicit synthetic dataset with the guest application and runs a privacy check against the final deployable artifact.
+The browser receives only the files under `site/`: a small HTML shell, same-origin CSS and JavaScript assets, and the Static Web Apps configuration. The build combines an explicit synthetic dataset with the guest application and runs a privacy check against every deployable content artifact. Keeping executable code in a same-origin file allows the Content Security Policy to reject inline script and style execution.
 
 ## Observability without visitor tracking
 
