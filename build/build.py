@@ -32,6 +32,7 @@ def main():
     (site / "index.html").write_text(output)
     (site / "styles.css").write_text(stylesheet)
     (site / "app.js").write_text(data + "\n\n" + app + "\n")
+    (site / "telemetry.js").write_text((ROOT / "src" / "telemetry.js").read_text())
     subprocess.run(["python3", str(ROOT / "build" / "privacy_check.py")], check=True)
     print(f"Built {site / 'index.html'} ({len(output):,} bytes)")
 

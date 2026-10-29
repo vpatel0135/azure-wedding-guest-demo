@@ -9,6 +9,7 @@ FILES = [
     ROOT / "site" / "index.html",
     ROOT / "site" / "app.js",
     ROOT / "site" / "styles.css",
+    ROOT / "site" / "telemetry.js",
 ]
 FORBIDDEN = {
     "phone number": re.compile(r"(?<!\d)(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}(?!\d)"),
