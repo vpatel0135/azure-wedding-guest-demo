@@ -1,6 +1,8 @@
-# Azure Wedding Operations Demo
+# Azure Wedding Guest Demo
 
 A privacy-safe portfolio implementation of a wedding guest experience deployed through an Azure landing-zone pattern. Every person, date, venue, schedule, and address in this repository is synthetic.
+
+This repository contains the guest-facing website. The separate [operations dashboard demo](https://github.com/vpatel0135/wedding-ops-dashboard-demo) is hosted at [ops.sidvivah26.com](https://ops.sidvivah26.com/).
 
 **Live demo:** [www.sidvivah26.com](https://www.sidvivah26.com/)
 
