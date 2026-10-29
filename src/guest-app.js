@@ -1215,7 +1215,8 @@ function renderGuestEventBlock(e){
   const items = guestTimelineForEvent(e.id);
   const venue = venueOf(e.venueId);
   const headHtml = `
-    <div class="guest-event-head">
+    <div class="guest-event-head guest-event-banner" data-event-palette="${esc(e.id)}">
+      <span class="guest-event-kicker">${esc(guestEventMood(e))}</span>
       <div class="guest-event-title">${esc(e.title)}</div>
       <div class="guest-event-date">${esc(fmtDate(e.startTime,{weekday:'long',month:'long',day:'numeric'}))}</div>
       <div class="guest-event-meta">${fmtTime(e.startTime)} – ${fmtTime(e.endTime)} · ${venue ? esc(venue.name) : "Venue TBD"}</div>
@@ -1247,15 +1248,20 @@ function renderGuestEventBlock(e){
    as a broken/fabricated count once every event has zero timeline items
    by design — replaced with the same "Schedule details coming soon"
    wording used in renderGuestEventBlock so the two surfaces agree. */
+function guestEventMood(e){
+  return ({event_mehndi:"A joyful beginning",event_vidhi:"Blessings & traditions",event_sangeet:"An evening of rhythm",event_wedding:"Together, forever",event_reception:"A night to remember",event_farewell:"Until next time"})[e.id] || "Our celebration";
+}
 function guestScheduleEventCardHtml(e, isLive){
   const items = guestTimelineForEvent(e.id);
   const venue = venueOf(e.venueId);
   return `
     <button class="guest-event-pick-card ${isLive?'is-live':''}" data-event-palette="${e.id}" data-guest-schedule-open="${e.id}" type="button">
       ${isLive ? `<span class="guest-live-pill"><span class="guest-live-dot"></span>Live Now</span>` : ""}
+      <span class="guest-event-kicker">${esc(guestEventMood(e))}</span>
       <div class="guest-event-pick-title">${esc(e.title)}</div>
       <div class="guest-event-pick-sub">${fmtTime(e.startTime)} – ${fmtTime(e.endTime)} · ${venue ? esc(venue.name) : "Venue TBD"}</div>
       <div class="guest-event-pick-count">${items.length ? `${items.length} moment${items.length===1?'':'s'}` : "Schedule details coming soon"}</div>
+      <span class="guest-event-card-footer">Open the schedule <span aria-hidden="true">↗</span></span>
     </button>
   `;
 }

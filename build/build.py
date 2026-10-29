@@ -17,7 +17,7 @@ def main():
     style_match = re.search(r"^<style>\s*(.*?)\s*</style>$", skeleton, re.S | re.M)
     if not style_match:
         raise RuntimeError("Expected exactly one inline style block")
-    stylesheet = style_match.group(1) + "\n" + banner_css.strip() + "\n"
+    stylesheet = style_match.group(1) + "\n" + (ROOT / "src" / "guest-event-theme.css").read_text() + "\n" + banner_css.strip() + "\n"
     output = skeleton[:style_match.start()] + '<link rel="stylesheet" href="/styles.css">' + skeleton[style_match.end():]
     output, count = re.subn(
         r"<script>\s*</script>",
