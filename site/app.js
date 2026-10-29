@@ -1,6 +1,6 @@
 /* Synthetic portfolio data. No record in this file describes a real person or event. */
 const guestData = {
-  wedding: { coupleNames: "Avery & Jordan", primaryDate: "2027-06-12", hashtag: "#EverAfterDemo" },
+  wedding: { coupleNames: "Avery & Jordan", primaryDate: "2027-06-12", hashtag: "#AJEver27" },
   photoGroups: [
     { title: "Wedding Party", names: ["Alex Morgan", "Casey Brooks", "Taylor Reed", "Riley Lane"] },
     { title: "College Friends", names: ["Jamie Park", "Cameron Stone", "Morgan Lee"] },
