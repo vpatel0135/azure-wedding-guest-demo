@@ -1,6 +1,8 @@
 name: Deploy portfolio demo
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -23,7 +25,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: wedding-${{ inputs.environment }}
+  group: wedding-${{ inputs.environment || 'production' }}
   cancel-in-progress: false
 
 env:
@@ -36,9 +38,9 @@ env:
 
 jobs:
   plan:
-    if: inputs.operation == 'plan'
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'plan'
     runs-on: ubuntu-latest
-    environment: wedding-${{ inputs.environment }}
+    environment: wedding-${{ inputs.environment || 'production' }}
     env:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
     steps:
@@ -56,21 +58,21 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Initialize state
         run: |
-          terraform -chdir="infra/environments/${{ inputs.environment }}" init -input=false \
+          terraform -chdir="infra/environments/${{ inputs.environment || 'production' }}" init -input=false \
             -backend-config="resource_group_name=${{ vars.TF_STATE_RESOURCE_GROUP }}" \
             -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_ACCOUNT }}" \
-            -backend-config="container_name=wedding-${{ inputs.environment }}" \
-            -backend-config="key=wedding-${{ inputs.environment }}.tfstate" \
+            -backend-config="container_name=wedding-${{ inputs.environment || 'production' }}" \
+            -backend-config="key=wedding-${{ inputs.environment || 'production' }}.tfstate" \
             -backend-config="use_azuread_auth=true" \
             -backend-config="tenant_id=${{ vars.AZURE_TENANT_ID }}" \
             -backend-config="subscription_id=${{ vars.AZURE_SUBSCRIPTION_ID }}"
       - name: Plan without a state write lock
-        run: terraform -chdir="infra/environments/${{ inputs.environment }}" plan -input=false -lock=false
+        run: terraform -chdir="infra/environments/${{ inputs.environment || 'production' }}" plan -input=false -lock=false
 
   apply:
-    if: inputs.operation == 'apply'
+    if: github.event_name == 'push' || inputs.operation == 'apply'
     runs-on: ubuntu-latest
-    environment: wedding-${{ inputs.environment }}
+    environment: wedding-${{ inputs.environment || 'production' }}
     env:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
     steps:
@@ -88,16 +90,16 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Initialize state
         run: |
-          terraform -chdir="infra/environments/${{ inputs.environment }}" init -input=false \
+          terraform -chdir="infra/environments/${{ inputs.environment || 'production' }}" init -input=false \
             -backend-config="resource_group_name=${{ vars.TF_STATE_RESOURCE_GROUP }}" \
             -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_ACCOUNT }}" \
-            -backend-config="container_name=wedding-${{ inputs.environment }}" \
-            -backend-config="key=wedding-${{ inputs.environment }}.tfstate" \
+            -backend-config="container_name=wedding-${{ inputs.environment || 'production' }}" \
+            -backend-config="key=wedding-${{ inputs.environment || 'production' }}.tfstate" \
             -backend-config="use_azuread_auth=true" \
             -backend-config="tenant_id=${{ vars.AZURE_TENANT_ID }}" \
             -backend-config="subscription_id=${{ vars.AZURE_SUBSCRIPTION_ID }}"
       - name: Apply reviewed environment scope
-        run: terraform -chdir="infra/environments/${{ inputs.environment }}" apply -input=false -auto-approve
+        run: terraform -chdir="infra/environments/${{ inputs.environment || 'production' }}" apply -input=false -auto-approve
       - name: Retrieve an ephemeral deployment token
         id: deployment-token
         shell: bash
