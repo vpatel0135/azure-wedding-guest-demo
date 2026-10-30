@@ -2,6 +2,7 @@
 """Build the synthetic portfolio site with CSP-compatible static assets."""
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -33,6 +34,10 @@ def main():
     (site / "styles.css").write_text(stylesheet)
     (site / "app.js").write_text(data + "\n\n" + app + "\n")
     (site / "telemetry.js").write_text((ROOT / "src" / "telemetry.js").read_text())
+    shutil.copyfile(
+        ROOT / "src" / "vendor" / "applicationinsights-web.min.js",
+        site / "applicationinsights-web.min.js",
+    )
     subprocess.run(["python3", str(ROOT / "build" / "privacy_check.py")], check=True)
     print(f"Built {site / 'index.html'} ({len(output):,} bytes)")
 

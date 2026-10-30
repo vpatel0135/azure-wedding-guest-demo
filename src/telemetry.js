@@ -2,7 +2,11 @@
   "use strict";
 
   const sdk = window.Microsoft && window.Microsoft.ApplicationInsights;
-  if (!sdk) return;
+  if (!sdk) {
+    document.documentElement.dataset.telemetryStatus = "sdk-unavailable";
+    console.warn("Regional analytics unavailable: Application Insights SDK did not initialize.");
+    return;
+  }
 
   const appInsights = new sdk.ApplicationInsights({
     config: {
@@ -15,6 +19,7 @@
   });
 
   appInsights.loadAppInsights();
+  document.documentElement.dataset.telemetryStatus = "active";
   appInsights.addTelemetryInitializer((item) => {
     const baseData = item.baseData || (item.baseData = {});
     const properties = baseData.properties || (baseData.properties = {});
